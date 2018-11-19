@@ -3,31 +3,27 @@ package com.kenesys.analysisplatform.api;
 import com.kenesys.analysisplatform.dao.TemplateDao;
 import com.kenesys.analysisplatform.domain.Template;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import java.util.List;
 
-@Path("/templates")
+@RestController
+@RequestMapping("/templates")
 public class TemplatesApi {
 
     @Autowired
     private TemplateDao templateDao;
 
-    @GET
-    @Produces("application/json")
+    @RequestMapping(method= RequestMethod.GET)
     public List<Template> getAllTemplates() {
-
         return templateDao.findAll();
     }
 
-    @POST
-    @Consumes("application/json")
-    public void addTemplate(Template template) {
-
+    @RequestMapping(method = RequestMethod.POST)
+    public void addTemplate(@RequestBody Template template) {
         templateDao.save(template);
     }
 }

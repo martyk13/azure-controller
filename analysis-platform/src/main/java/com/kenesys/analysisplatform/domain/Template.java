@@ -2,6 +2,8 @@ package com.kenesys.analysisplatform.domain;
 
 import org.springframework.data.annotation.Id;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Domain model for Azure Templates and associated metadata
  */
@@ -10,8 +12,13 @@ public class Template {
     @Id
     String id;
 
+    @NotNull
     String name;
+
+    @NotNull
     String description;
+
+    @NotNull
     String templateUrl;
 
     public Template() {
@@ -21,14 +28,6 @@ public class Template {
         this.name = name;
         this.description = description;
         this.templateUrl = templateUrl;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getName() {
