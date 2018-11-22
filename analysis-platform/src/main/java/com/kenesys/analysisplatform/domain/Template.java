@@ -30,6 +30,16 @@ public class Template {
         this.templateUrl = templateUrl;
     }
 
+    public void update(Template template){
+        this.name = template.getName();
+        this.description = template.getDescription();
+        this.templateUrl = template.getTemplateUrl();
+    }
+
+    public String getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
