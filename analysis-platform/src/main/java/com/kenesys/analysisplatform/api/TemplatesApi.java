@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -47,6 +49,12 @@ public class TemplatesApi {
     @RequestMapping(value="/{id}",method= RequestMethod.DELETE)
     public void deleteTemplate(@PathVariable String id) {
             templateDao.deleteById(id);
+    }
+
+    @RequestMapping(value="/{id}/file",method= RequestMethod.GET)
+    public File getTemplateFile(@PathVariable String id) throws IOException {
+        Template template = templateDao.findById(id).get();
+        return templateService.getTemplateFile(template);
     }
 }
 
