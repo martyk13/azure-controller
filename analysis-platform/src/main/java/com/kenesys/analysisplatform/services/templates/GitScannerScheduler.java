@@ -1,19 +1,23 @@
 package com.kenesys.analysisplatform.services.templates;
 
+import com.kenesys.analysisplatform.domain.Template;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.lib.RepositoryCache;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.util.FS;
+import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -22,6 +26,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 @Component
 public class GitScannerScheduler {
@@ -36,6 +41,9 @@ public class GitScannerScheduler {
 
     @Value( "${templates.gitscanner.gitbranch}" )
     public String gitBranch;
+
+    @Autowired
+    private TemplateService templateService;
 
     private Git gitRepository;
 
@@ -69,18 +77,42 @@ public class GitScannerScheduler {
         Ref branchRef = checkout.setName(gitBranch).call();
 
         // a RevWalk allows to walk over commits based on some filtering that is defined
-        RevWalk walk = new RevWalk(gitRepository.getRepository());
+        try(RevWalk walk = new RevWalk(gitRepository.getRepository())) {
 
-        RevCommit commit = walk.parseCommit(branchRef.getObjectId());
-        RevTree tree = commit.getTree();
+            RevCommit commit = walk.parseCommit(branchRef.getObjectId());
+            RevTree tree = commit.getTree();
 
-        // now use a TreeWalk to iterate over all files in the Tree recursively
-        // you can set Filters to narrow down the results if needed
-        TreeWalk treeWalk = new TreeWalk(gitRepository.getRepository());
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
-        while (treeWalk.next()) {
-            LOGGER.info("File found in git repository: " + treeWalk.getPathString());
+            // now use a TreeWalk to iterate over all files in the Tree recursively
+            // you can set Filters to narrow down the results if needed
+            TreeWalk treeWalk = new TreeWalk(gitRepository.getRepository());
+            treeWalk.addTree(tree);
+            treeWalk.setRecursive(true);
+            while (treeWalk.next()) {
+                String templateFilePath = treeWalk.getPathString();
+                LOGGER.info("File found in git repository: " + templateFilePath);
+                RevCommit lastCommit = geLastCommitForFile(templateFilePath);
+                Template nextTemplate = new Template(templateFilePath,
+                        null,
+                        lastCommit.getAuthorIdent().getName(),
+                        lastCommit.getAuthorIdent().getEmailAddress(),
+                        lastCommit.getCommitterIdent().getName(),
+                        lastCommit.getCommitterIdent().getEmailAddress(),
+                        lastCommit.getFullMessage(),
+                        lastCommit.getCommitTime());
+                templateService.updateTemplate(nextTemplate);
+            }
         }
+    }
+
+    private RevCommit geLastCommitForFile(String templateFilePath) throws IOException {
+        try( RevWalk revWalk = new RevWalk( gitRepository.getRepository() ) ) {
+            Ref headRef = gitRepository.getRepository().exactRef( Constants.HEAD );
+            RevCommit headCommit = revWalk.parseCommit( headRef.getObjectId() );
+            revWalk.markStart( headCommit );
+            revWalk.sort( RevSort.COMMIT_TIME_DESC );
+            revWalk.setTreeFilter( AndTreeFilter.create( PathFilter.create( templateFilePath ), TreeFilter.ANY_DIFF ) );
+            return revWalk.next();
+        }
+
     }
 }
