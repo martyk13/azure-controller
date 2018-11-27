@@ -19,16 +19,16 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class SwaggerConfig extends WebMvcConfigurationSupport {
 
     @Bean
-    public Docket productApi() {
+    public Docket platformApi() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.kenesys.analysisplatform"))
                 //.paths(PathSelectors.regex("/templates.*"))
                 .build()
-                .apiInfo(metaData());
+                .apiInfo(buildMetaData());
     }
 
-    private ApiInfo metaData() {
+    private ApiInfo buildMetaData() {
         return new ApiInfoBuilder()
                 .title("Azure Analysis Platform REST API")
                 .description("\"Spring Boot REST API for Azure Analysis Platform\"")
