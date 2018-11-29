@@ -1,6 +1,5 @@
 package com.kenesys.analysisplatform.config;
 
-
 import com.kenesys.analysisplatform.services.templates.GitScanner;
 import com.kenesys.analysisplatform.services.templates.TemplateService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -21,6 +21,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Manages the connection to the git repository containing the {@link Template} files
+ * and adds/creates any metadata in the DB associated with these
+ */
 public class GitScanner implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitScanner.class);
@@ -42,6 +46,13 @@ public class GitScanner implements Runnable {
         this.templateService = templateService;
     }
 
+    /**
+     * Open the git repository ready to be scanned
+     * if the repository doesn't currently exist then clone it
+     *
+     * @throws IOException
+     * @throws GitAPIException
+     */
     public void openGitRepo() throws IOException, GitAPIException {
         try {
             LOGGER.info("Opening the git repository {}", gitDirectory);
@@ -57,6 +68,9 @@ public class GitScanner implements Runnable {
         }
     }
 
+    /**
+     * Close the connection to the git repository in a controlled way
+     */
     public void closeGitRepo(){
         LOGGER.info("Closing the git repository");
         gitRepository.close();
@@ -67,6 +81,12 @@ public class GitScanner implements Runnable {
         scanGitRepository();
     }
 
+    /**
+     * Scan the git repository for any template files.
+     * When a template is found this is checked against the
+     * existing database metadata and any additional information
+     * or templates detected since the last scan are added.
+     */
     public void scanGitRepository() {
         try {
             openGitRepo();
@@ -111,6 +131,13 @@ public class GitScanner implements Runnable {
         }
     }
 
+    /**
+     * Get the latest {@link RevCommit} from the git repository for the provided file path
+     *
+     * @param templateFilePath {@link String} containing the file path
+     * @return {@link RevCommit}  the latest commit information for the file
+     * @throws IOException
+     */
     private RevCommit geLastCommitForFile(String templateFilePath) throws IOException {
         try( RevWalk revWalk = new RevWalk( gitRepository.getRepository() ) ) {
             Ref headRef = gitRepository.getRepository().exactRef( Constants.HEAD );
