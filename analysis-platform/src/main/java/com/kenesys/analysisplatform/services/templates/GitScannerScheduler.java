@@ -72,6 +72,8 @@ public class GitScannerScheduler {
     public void scanGitRepository() throws IOException, GitAPIException {
         LOGGER.info("Beginning scan of git repository");
 
+        // TODO: neeed to do a fetch here as well
+
         // Make sure the correct branch is chacked out before parsing the files
         CheckoutCommand checkout = gitRepository.checkout();
         Ref branchRef = checkout.setName(gitBranch).call();
