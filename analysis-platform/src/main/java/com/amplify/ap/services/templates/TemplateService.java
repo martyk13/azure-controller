@@ -1,25 +1,31 @@
-package com.kenesys.analysisplatform.services.templates;
+package com.amplify.ap.services.templates;
 
-import com.kenesys.analysisplatform.dao.TemplateDao;
-import com.kenesys.analysisplatform.domain.Template;
+import com.amplify.ap.domain.Template;
+import com.amplify.ap.dao.TemplateDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
 
 @Service
 public class TemplateService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TemplateService.class);
 
+    @Value( "${templates.gitscanner.gitdir}" )
+    private String gitDirectory;
+
     @Autowired
     private TemplateDao templateDao;
 
-    public File getTemplateFile(Template template) throws IOException {
-        return null;
+    public File getTemplateFile(String id) {
+        LOGGER.debug("Getting file for template {}", id);
+        Template template = templateDao.findById(id).get();
+        File templateFile = new File(gitDirectory + File.separator + template.getFilePath());
+        return templateFile;
     }
 
     public void updateTemplate(Template template) {

@@ -15,15 +15,15 @@ createResource() {
     az acr create --resource-group analysisPlatformGroup --name analysisPlatformRepo --sku Basic --admin-enabled true
     az acr login --name analysisPlatformRepo
     NAMESPACE=`az acr show --name analysisPlatformRepo --query loginServer`
-    docker tag kenesys/analysis-platform:0.0.1-SNAPSHOT ${NAMESPACE//\"}/kenesys/analysis-platform:v0.1
-    docker push ${NAMESPACE//\"}/kenesys/analysis-platform:v0.1
+    docker tag amplify/analysis-platform:0.0.1-SNAPSHOT ${NAMESPACE//\"}/amplify/analysis-platform:v0.1
+    docker push ${NAMESPACE//\"}/amplify/analysis-platform:v0.1
 
     # Start the container instance
     PASSWORD=`az acr credential show --name analysisPlatformRepo --query "passwords[0].value"`
     az container create \
         --resource-group analysisPlatformGroup \
         --name analysis-platform \
-        --image ${NAMESPACE//\"}/kenesys/analysis-platform:v0.1 \
+        --image ${NAMESPACE//\"}/amplify/analysis-platform:v0.1 \
         --cpu 1 \
         --memory 1 \
         --registry-login-server ${NAMESPACE//\"} \
@@ -37,7 +37,7 @@ createResource() {
 deleteResource() {
     echo "Deleting resources"
     NAMESPACE=`az acr show --name analysisPlatformRepo --query loginServer`
-    docker rmi ${NAMESPACE//\"}/kenesys/analysis-platform:v0.1
+    docker rmi ${NAMESPACE//\"}/amplify/analysis-platform:v0.1
     az group delete --name analysisPlatformGroup -y
 }
 
