@@ -1,7 +1,7 @@
-package com.kenesys.analysisplatform.services.templates;
+package com.amplify.ap.services.templates;
 
-import com.kenesys.analysisplatform.dao.TemplateDao;
-import com.kenesys.analysisplatform.domain.Template;
+import com.amplify.ap.domain.Template;
+import com.amplify.ap.dao.TemplateDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

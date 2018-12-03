@@ -1,7 +1,7 @@
-package com.kenesys.analysisplatform.config;
+package com.amplify.ap.config;
 
-import com.kenesys.analysisplatform.services.templates.GitScanner;
-import com.kenesys.analysisplatform.services.templates.TemplateService;
+import com.amplify.ap.services.templates.TemplateService;
+import com.amplify.ap.services.templates.GitScanner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

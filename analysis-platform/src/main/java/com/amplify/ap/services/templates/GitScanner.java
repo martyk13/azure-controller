@@ -1,6 +1,6 @@
-package com.kenesys.analysisplatform.services.templates;
+package com.amplify.ap.services.templates;
 
-import com.kenesys.analysisplatform.domain.Template;
+import com.amplify.ap.domain.Template;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
