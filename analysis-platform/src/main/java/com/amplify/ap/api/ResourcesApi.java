@@ -34,7 +34,7 @@ public class ResourcesApi {
     }
 
     @RequestMapping(method= RequestMethod.POST)
-    public void createResources(@RequestParam("resource-group") String resourceGroup, @RequestParam("template-id") String templateId) {
+    public void createResources(@RequestParam(name = "resource-group") String resourceGroup, @RequestParam(name = "template-id") String templateId) {
         if(templateDao.existsById(templateId)) {
             TemplateInstance newTemplateInstance = new TemplateInstance(templateId, UUID.randomUUID().toString());
             if(!resourceDao.existsById(resourceGroup)) {
