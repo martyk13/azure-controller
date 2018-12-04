@@ -4,6 +4,8 @@ import com.amplify.ap.dao.ResourceDao;
 import com.amplify.ap.dao.TemplateDao;
 import com.amplify.ap.domain.Resource;
 import com.amplify.ap.domain.TemplateInstance;
+import com.amplify.ap.services.resources.ResourceService;
+import com.amplify.ap.services.templates.TemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,12 @@ public class ResourcesApi {
     @Autowired
     private TemplateDao templateDao;
 
+    @Autowired
+    private ResourceService resourceService;
+
+    @Autowired
+    private TemplateService templateService;
+
     @RequestMapping(method = RequestMethod.GET)
     public List<Resource> getAllResources() {
         return resourceDao.findAll();
@@ -38,9 +46,14 @@ public class ResourcesApi {
         if (templateDao.existsById(templateId)) {
             TemplateInstance newTemplateInstance = new TemplateInstance(templateId, UUID.randomUUID().toString());
             if (!resourceDao.existsById(resourceGroup)) {
-                Resource newResource = new Resource(resourceGroup, Arrays.asList(newTemplateInstance));
-                resourceDao.save(newResource);
+                Resource resource = new Resource(resourceGroup, Arrays.asList(newTemplateInstance));
+                resourceDao.save(resource);
+            } else {
+                Resource resource = resourceDao.findById(resourceGroup).get();
+                resource.addTemplateInstance(newTemplateInstance);
+                resourceDao.save(resource);
             }
+            resourceService.requestResource(resourceGroup, newTemplateInstance.getInstanceId(), templateService.getTemplateFile(templateId));
         } else {
             throw new IllegalArgumentException("Template ID: " + templateId + " does not exist");
         }
