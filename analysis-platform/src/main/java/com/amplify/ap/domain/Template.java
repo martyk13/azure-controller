@@ -1,4 +1,4 @@
-package com.kenesys.analysisplatform.domain;
+package com.amplify.ap.domain;
 
 import org.springframework.data.annotation.Id;
 

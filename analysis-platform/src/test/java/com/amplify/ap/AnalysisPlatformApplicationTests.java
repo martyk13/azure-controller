@@ -1,4 +1,4 @@
-package com.kenesys.analysisplatform;
+package com.amplify.ap;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

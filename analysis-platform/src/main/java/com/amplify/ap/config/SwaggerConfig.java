@@ -1,4 +1,4 @@
-package com.kenesys.analysisplatform.config;
+package com.amplify.ap.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +22,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport {
     public Docket platformApi() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.kenesys.analysisplatform"))
+                .apis(RequestHandlerSelectors.basePackage("com.amplify.ap"))
                 //.paths(PathSelectors.regex("/templates.*"))
                 .build()
                 .apiInfo(buildMetaData());
