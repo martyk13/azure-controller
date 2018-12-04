@@ -1,7 +1,7 @@
 package com.amplify.ap.api;
 
-import com.amplify.ap.domain.Template;
 import com.amplify.ap.dao.TemplateDao;
+import com.amplify.ap.domain.Template;
 import com.amplify.ap.services.templates.TemplateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,29 +36,29 @@ public class TemplatesApi {
     @Autowired
     private TemplateService templateService;
 
-    @RequestMapping(method= RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public List<Template> getAllTemplates() {
         return templateDao.findAll();
     }
 
-    @RequestMapping(value="/{id}",method= RequestMethod.GET)
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     public Template getTemplate(@PathVariable String id) {
         return templateDao.findById(id).get();
     }
 
-    @RequestMapping(value="/{id}",method= RequestMethod.DELETE)
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     public void deleteTemplate(@PathVariable String id) {
-            templateDao.deleteById(id);
+        templateDao.deleteById(id);
     }
 
-    @RequestMapping(value="/{id}/description",method= RequestMethod.PUT)
+    @RequestMapping(value = "/{id}/description", method = RequestMethod.PUT)
     public void updateTemplateDescription(@PathVariable String id, @RequestBody Template template) {
         Template toUpdate = templateDao.findById(id).get();
         toUpdate.setDescription(template.getDescription());
         templateDao.save(toUpdate);
     }
 
-    @RequestMapping(value="/{id}/file",method= RequestMethod.GET)
+    @RequestMapping(value = "/{id}/file", method = RequestMethod.GET)
     public ResponseEntity<Resource> getTemplateFile(@PathVariable String id) throws IOException {
         File templateFile = templateService.getTemplateFile(id);
         LOGGER.info("Returning file {} for template {}", templateFile.getName(), id);
@@ -66,7 +66,8 @@ public class TemplatesApi {
         Path path = Paths.get(templateFile.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 
-        HttpHeaders headers = new HttpHeaders(); headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + templateFile.getName());
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + templateFile.getName());
 
         return ResponseEntity.ok()
                 .headers(headers)

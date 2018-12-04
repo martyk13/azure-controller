@@ -71,7 +71,7 @@ public class GitScanner implements Runnable {
     /**
      * Close the connection to the git repository in a controlled way
      */
-    public void closeGitRepo(){
+    public void closeGitRepo() {
         LOGGER.info("Closing the git repository");
         gitRepository.close();
     }
@@ -124,7 +124,7 @@ public class GitScanner implements Runnable {
                     templateService.updateTemplate(nextTemplate);
                 }
             }
-        } catch(IOException | GitAPIException e) {
+        } catch (IOException | GitAPIException e) {
             LOGGER.error("Error scanning git repository: " + e.getMessage());
         } finally {
             closeGitRepo();
@@ -139,12 +139,12 @@ public class GitScanner implements Runnable {
      * @throws IOException
      */
     private RevCommit geLastCommitForFile(String templateFilePath) throws IOException {
-        try( RevWalk revWalk = new RevWalk( gitRepository.getRepository() ) ) {
-            Ref headRef = gitRepository.getRepository().exactRef( Constants.HEAD );
-            RevCommit headCommit = revWalk.parseCommit( headRef.getObjectId() );
-            revWalk.markStart( headCommit );
-            revWalk.sort( RevSort.COMMIT_TIME_DESC );
-            revWalk.setTreeFilter( AndTreeFilter.create( PathFilter.create( templateFilePath ), TreeFilter.ANY_DIFF ) );
+        try (RevWalk revWalk = new RevWalk(gitRepository.getRepository())) {
+            Ref headRef = gitRepository.getRepository().exactRef(Constants.HEAD);
+            RevCommit headCommit = revWalk.parseCommit(headRef.getObjectId());
+            revWalk.markStart(headCommit);
+            revWalk.sort(RevSort.COMMIT_TIME_DESC);
+            revWalk.setTreeFilter(AndTreeFilter.create(PathFilter.create(templateFilePath), TreeFilter.ANY_DIFF));
             return revWalk.next();
         }
 

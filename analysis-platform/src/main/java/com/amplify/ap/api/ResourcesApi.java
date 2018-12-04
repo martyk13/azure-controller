@@ -28,16 +28,16 @@ public class ResourcesApi {
     @Autowired
     private TemplateDao templateDao;
 
-    @RequestMapping(method= RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public List<Resource> getAllResources() {
         return resourceDao.findAll();
     }
 
-    @RequestMapping(method= RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST)
     public void createResources(@RequestParam(name = "resource-group") String resourceGroup, @RequestParam(name = "template-id") String templateId) {
-        if(templateDao.existsById(templateId)) {
+        if (templateDao.existsById(templateId)) {
             TemplateInstance newTemplateInstance = new TemplateInstance(templateId, UUID.randomUUID().toString());
-            if(!resourceDao.existsById(resourceGroup)) {
+            if (!resourceDao.existsById(resourceGroup)) {
                 Resource newResource = new Resource(resourceGroup, Arrays.asList(newTemplateInstance));
                 resourceDao.save(newResource);
             }

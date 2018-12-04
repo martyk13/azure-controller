@@ -1,7 +1,7 @@
 package com.amplify.ap.services.templates;
 
-import com.amplify.ap.domain.Template;
 import com.amplify.ap.dao.TemplateDao;
+import com.amplify.ap.domain.Template;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ public class TemplateService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TemplateService.class);
 
-    @Value( "${templates.gitscanner.gitdir}" )
+    @Value("${templates.gitscanner.gitdir}")
     private String gitDirectory;
 
     @Autowired
@@ -29,7 +29,7 @@ public class TemplateService {
     }
 
     public void updateTemplate(Template template) {
-        if(template != null) {
+        if (template != null) {
             Template toUpdate = templateDao.findByFilePath(template.getFilePath());
             if (toUpdate == null) {
                 LOGGER.info("Saving new template {}", template);

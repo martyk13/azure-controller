@@ -1,7 +1,7 @@
 package com.amplify.ap.config;
 
-import com.amplify.ap.services.templates.TemplateService;
 import com.amplify.ap.services.templates.GitScanner;
+import com.amplify.ap.services.templates.TemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,18 +14,18 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @Configuration
 @EnableScheduling
-public class SchedulingConfig  implements SchedulingConfigurer {
+public class SchedulingConfig implements SchedulingConfigurer {
 
     @Value("${templates.gitscanner.schedule}")
     private String gitScannerSchedule;
 
-    @Value( "${templates.gitscanner.gitdir}" )
+    @Value("${templates.gitscanner.gitdir}")
     private String gitDirectory;
 
-    @Value( "${templates.gitscanner.gituri}" )
+    @Value("${templates.gitscanner.gituri}")
     private String gitRepositoryUri;
 
-    @Value( "${templates.gitscanner.gitbranch}" )
+    @Value("${templates.gitscanner.gitbranch}")
     public String gitBranch;
 
     @Autowired
