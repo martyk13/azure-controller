@@ -2,7 +2,9 @@ package com.amplify.ap.services.templates;
 
 import com.amplify.ap.domain.Template;
 import org.eclipse.jgit.api.CheckoutCommand;
+import org.eclipse.jgit.api.FetchCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Constants;
@@ -11,6 +13,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
@@ -20,6 +23,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages the connection to the git repository containing the {@link Template} files
@@ -91,12 +96,16 @@ public class GitScanner implements Runnable {
         try {
             openGitRepo();
 
-            // TODO: neeed to do a fetch here first
+            LOGGER.info("Fetching latest updates from git");
+            gitFetch();
 
             LOGGER.info("Beginning scan of git repository");
             // Make sure the correct branch is chacked out before parsing the files
             CheckoutCommand checkout = gitRepository.checkout();
             Ref branchRef = checkout.setName(gitBranch).call();
+
+            // HARD reset the branch to ensure it matches the remote
+            gitRepository.reset().setMode(ResetCommand.ResetType.HARD).setRef("origin/" + gitBranch).call();
 
             // a RevWalk allows to walk over commits based on some filtering that is defined
             try (RevWalk walk = new RevWalk(gitRepository.getRepository())) {
@@ -112,7 +121,7 @@ public class GitScanner implements Runnable {
                 while (treeWalk.next()) {
                     String templateFilePath = treeWalk.getPathString();
                     LOGGER.info("File found in git repository: " + templateFilePath);
-                    RevCommit lastCommit = geLastCommitForFile(templateFilePath);
+                    RevCommit lastCommit = getLastCommitForFile(templateFilePath);
                     Template nextTemplate = new Template(templateFilePath,
                             null,
                             lastCommit.getAuthorIdent().getName(),
@@ -138,7 +147,7 @@ public class GitScanner implements Runnable {
      * @return {@link RevCommit}  the latest commit information for the file
      * @throws IOException
      */
-    private RevCommit geLastCommitForFile(String templateFilePath) throws IOException {
+    private RevCommit getLastCommitForFile(String templateFilePath) throws IOException {
         try (RevWalk revWalk = new RevWalk(gitRepository.getRepository())) {
             Ref headRef = gitRepository.getRepository().exactRef(Constants.HEAD);
             RevCommit headCommit = revWalk.parseCommit(headRef.getObjectId());
@@ -147,6 +156,22 @@ public class GitScanner implements Runnable {
             revWalk.setTreeFilter(AndTreeFilter.create(PathFilter.create(templateFilePath), TreeFilter.ANY_DIFF));
             return revWalk.next();
         }
-
     }
+
+    /**
+     * Perform a fetch on the git repo to get all the latest commits
+     *
+     * @throws {@link GitAPIException}
+     */
+    private void gitFetch() throws GitAPIException {
+        FetchCommand fetch = gitRepository.fetch();
+        List<RefSpec> specs = new ArrayList<>();
+        specs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
+        specs.add(new RefSpec("+refs/tags/*:refs/tags/*"));
+        specs.add(new RefSpec("+refs/notes/*:refs/notes/*"));
+        fetch.setRefSpecs(specs);
+        fetch.call();
+    }
+
+
 }
