@@ -49,7 +49,7 @@ public class Template {
         this.lastCommitTime = lastCommitTime;
     }
 
-    public void update(Template template){
+    public void update(Template template) {
         this.lastCommitter = template.getLastCommitter();
         this.lastCommitterEmail = template.getLastCommitterEmail();
         this.lastCommitMessage = template.getLastCommitMessage();
