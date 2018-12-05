@@ -45,7 +45,7 @@ public class ResourceService {
                 = new LinkedMultiValueMap<>();
         body.add("resource-group", resourceGroup);
         body.add("instance-id", instanceId);
-        body.add("file", template);
+        body.add("template", template);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity
                 = new HttpEntity<>(body, headers);
