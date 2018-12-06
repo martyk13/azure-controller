@@ -28,7 +28,7 @@ public class AzureService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AzureService.class);
 
-    @Value("${azure.login.clientId}")
+    @Value("${azure.login.clientid}")
     private String azureClientId;
 
     @Value("${azure.login.domain}")
