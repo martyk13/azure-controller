@@ -15,11 +15,36 @@ createResource() {
     az acr create --resource-group analysisPlatformGroup --name analysisPlatformRepo --sku Basic --admin-enabled true
     az acr login --name analysisPlatformRepo
     NAMESPACE=`az acr show --name analysisPlatformRepo --query loginServer`
+    # Tag and push the AP
     docker tag amplify/analysis-platform:0.0.1-SNAPSHOT ${NAMESPACE//\"}/amplify/analysis-platform:v0.1
     docker push ${NAMESPACE//\"}/amplify/analysis-platform:v0.1
+    # Tag and push the APC
+    docker tag amplify/analysis-platform-controller:0.0.1-SNAPSHOT ${NAMESPACE//\"}/amplify/analysis-platform-controller:v0.1
+    docker push ${NAMESPACE//\"}/amplify/analysis-platform-controller:v0.1
 
-    # Start the container instance
     PASSWORD=`az acr credential show --name analysisPlatformRepo --query "passwords[0].value"`
+    # Load the auth file
+    source $AZURE_AUTH_LOCATION
+
+    # Start the AP container instance
+    az container create \
+        --resource-group analysisPlatformGroup \
+        --name analysis-platform-controller \
+        --image ${NAMESPACE//\"}/amplify/analysis-platform-controller:v0.1 \
+        --cpu 1 \
+        --memory 1 \
+        --registry-login-server ${NAMESPACE//\"} \
+        --registry-username analysisPlatformRepo \
+        --registry-password ${PASSWORD//\"} \
+        --dns-name-label analysis-platform-controller \
+        --environment-variables \
+            AZURE_LOGIN_CLIENTID=${client} \
+            AZURE_LOGIN_DOMAIN=${tenant} \
+            AZURE_LOGIN_SECRET=${key}  \
+        --ports 8080
+    APC_IP=`az container show --name analysis-platform-controller  --resource-group analysisPlatformGroup | jq -r '.ipAddress.ip'`
+
+    # Start the AP container instance
     az container create \
         --resource-group analysisPlatformGroup \
         --name analysis-platform \
@@ -30,7 +55,9 @@ createResource() {
         --registry-username analysisPlatformRepo \
         --registry-password ${PASSWORD//\"} \
         --dns-name-label analysis-platform \
-        --environment-variables SPRING_DATA_MONGODB_URI=${MONGODB_URI} \
+        --environment-variables \
+            SPRING_DATA_MONGODB_URI=${MONGODB_URI} \
+            RESOURCES_CLIENTS_REQUESTURL="http://${APC_IP}:8080/deployARMTemplate" \
         --ports 8080
 }
 

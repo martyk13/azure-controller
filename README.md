@@ -37,3 +37,9 @@ or pushed and deployed to azure using the script provided in the 'scripts' direc
 # Remove the Azure deployment
 ./deploy-to-azure.sh --delete
 ```
+*Note:* To deploy to azure using the script JQ is needed for json parsing:
+```
+yum install epel-release
+
+sudo yum install jq
+```
