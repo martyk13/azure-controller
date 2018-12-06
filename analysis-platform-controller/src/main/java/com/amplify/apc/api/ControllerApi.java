@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,9 +28,9 @@ public class ControllerApi {
     private AzureService azureService;
 
     @RequestMapping(value = "/deployARMTemplate", method = RequestMethod.POST, consumes = {"multipart/form-data"})
-    public ResponseEntity<String> deployARMTemplate(@RequestPart("resource-group") @NotBlank String resourceGroupName,
-                                                    @RequestPart("instance-id") @NotBlank String instanceId,
-                                                    @RequestPart("template") @Valid MultipartFile template) {
+    public ResponseEntity<String> deployARMTemplate(@RequestParam("resource-group") @NotBlank String resourceGroupName,
+                                                    @RequestParam("instance-id") @NotBlank String instanceId,
+                                                    @RequestParam("template") @Valid MultipartFile template) {
 
         LOGGER.info("Deploy ARM Template: [" + instanceId + "] to group: " + resourceGroupName);
 

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +43,7 @@ public class ResourcesApi {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public void createResources(@RequestParam(name = "resource-group") String resourceGroup, @RequestParam(name = "template-id") String templateId) {
+    public void createResources(@RequestParam(name = "resource-group") String resourceGroup, @RequestParam(name = "template-id") String templateId) throws IOException {
         if (templateDao.existsById(templateId)) {
             TemplateInstance newTemplateInstance = new TemplateInstance(templateId, UUID.randomUUID().toString());
             if (!resourceDao.existsById(resourceGroup)) {
