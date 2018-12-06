@@ -41,5 +41,5 @@ or pushed and deployed to azure using the script provided in the 'scripts' direc
 ```
 yum install epel-release
 
-sudo yum install jq
+yum install jq
 ```
