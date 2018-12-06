@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.List;
+import java.util.Map;
 
 public class Resource {
 
@@ -13,9 +13,9 @@ public class Resource {
 
     @NotNull
     @Size(min = 1)
-    private List<TemplateInstance> templateInstances;
+    private Map<String, TemplateInstance> templateInstances;
 
-    public Resource(String resourceGroup, @NotNull @Size(min = 1) List<TemplateInstance> templateInstances) {
+    public Resource(String resourceGroup, Map<String, TemplateInstance> templateInstances) {
         this.resourceGroup = resourceGroup;
         this.templateInstances = templateInstances;
     }
@@ -24,12 +24,12 @@ public class Resource {
         return resourceGroup;
     }
 
-    public List<TemplateInstance> getTemplateInstances() {
+    public Map<String, TemplateInstance> getTemplateInstances() {
         return templateInstances;
     }
 
     public void addTemplateInstance(TemplateInstance templateInstance) {
-        this.templateInstances.add(templateInstance);
+        this.templateInstances.put(templateInstance.getInstanceId(), templateInstance);
     }
 
     @Override

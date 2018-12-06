@@ -13,6 +13,7 @@ import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.rest.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -43,8 +44,11 @@ public class AzureService {
     @Value("${azure.props.adminpassword}")
     private String adminPassword;
 
+    @Autowired
+    private ResponseService responseService;
+
     @Async
-    public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId) {
+    public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId, String requestOrigin) {
         try {
             String templateJson = getTemplate(template);
 
@@ -55,8 +59,10 @@ public class AzureService {
             azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup).withTemplate(templateJson)
                     .withParameters(getProperties(instanceId)).withMode(DeploymentMode.INCREMENTAL).create();
             LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
+            responseService.updateStatus(requestOrigin, resourceGroupName, instanceId, "FINISHED");
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
+            responseService.updateStatus(requestOrigin, resourceGroupName, instanceId, "FAILED");
         }
     }
 

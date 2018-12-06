@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -27,7 +29,7 @@ public class ResourceService {
     @Value("${resources.clients.requesturl}")
     private String resourceRequestUrl;
 
-    public void requestResource(String resourceGroup, String instanceId, File template) throws IOException {
+    public HttpStatus requestResource(String resourceGroup, String instanceId, File template) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("Requesting new resource from ");
         sb.append(resourceRequestUrl);
@@ -59,6 +61,7 @@ public class ResourceService {
         HttpEntity<MultiValueMap<String, Object>> requestEntity
                 = new HttpEntity<>(body, headers);
 
-        restTemplate.postForEntity(resourceRequestUrl, requestEntity, String.class);
+        ResponseEntity response = restTemplate.postForEntity(resourceRequestUrl, requestEntity, String.class);
+        return response.getStatusCode();
     }
 }
