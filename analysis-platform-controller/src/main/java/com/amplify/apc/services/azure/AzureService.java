@@ -24,6 +24,23 @@ public class AzureService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AzureService.class);
 
+    @Async
+    public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId) {
+        try {
+            String templateJson = getTemplate(template);
+
+            Azure azure = azureLogin();
+            ResourceGroup resourceGroup = getResourceGroup(azure, resourceGroupName);
+
+            LOGGER.info("Starting a deployment for an Azure App Service: " + instanceId);
+            azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup).withTemplate(templateJson)
+                    .withParameters(getProperties(instanceId)).withMode(DeploymentMode.INCREMENTAL).create();
+            LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
     private Azure azureLogin() throws IOException {
         LOGGER.info("Authenticating to AZURE");
         final File credFile = new File(System.getenv("AZURE_AUTH_LOCATION"));
@@ -31,35 +48,16 @@ public class AzureService {
                 .withDefaultSubscription();
     }
 
-    public ResourceGroup createResourceGroup(String resourceGroupName) throws IOException {
-        Azure azure = azureLogin();
-        LOGGER.info("Creating a resource group with name: " + resourceGroupName);
-        ResourceGroup resourceGroup = azure.resourceGroups().define(resourceGroupName).withRegion(Region.US_EAST).create();
-        LOGGER.info("Created a resource group with name: " + resourceGroup);
-        return resourceGroup;
-    }
-
-    public ResourceGroup getExistingResourceGroup(String resourceGroupName) throws IOException {
-        Azure azure = azureLogin();
-        LOGGER.info("Getting a resource group with name: " + resourceGroupName);
-        ResourceGroup resourceGroup = azure.resourceGroups().getByName(resourceGroupName);
-        LOGGER.info("Got a resource group with name: " + resourceGroup);
-        return resourceGroup;
-    }
-
-    @Async
-    public void createResourceFromArmTemplate(File template, ResourceGroup resourceGroup, String instanceId) {
-        try {
-            Azure azure = azureLogin();
-            String templateJson = getTemplate(template);
-            LOGGER.info("Starting a deployment for an Azure App Service: " + instanceId);
-            azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup).withTemplate(templateJson)
-                    .withParameters(getProperties(instanceId)).withMode(DeploymentMode.INCREMENTAL).create();
-
-            LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+    private ResourceGroup getResourceGroup(Azure azure, String resourceGroupName) throws IOException {
+        ResourceGroup resourceGroup;
+        if (azure.resourceGroups().checkExistence(resourceGroupName)) {
+            LOGGER.info("Getting an exisiting resource group with name: " + resourceGroupName);
+            resourceGroup = azure.resourceGroups().getByName(resourceGroupName);
+        } else {
+            LOGGER.info("Creating a new resource group with name: " + resourceGroupName);
+            resourceGroup = azure.resourceGroups().define(resourceGroupName).withRegion(Region.US_EAST).create();
         }
+        return resourceGroup;
     }
 
     private String getProperties(String instanceId) {

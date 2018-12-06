@@ -1,14 +1,14 @@
 package com.amplify.apc.api;
 
 import com.amplify.apc.services.azure.AzureService;
-import com.microsoft.azure.management.resources.ResourceGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,10 +28,9 @@ public class ControllerApi {
     private AzureService azureService;
 
     @RequestMapping(value = "/deployARMTemplate", method = RequestMethod.POST, consumes = {"multipart/form-data"})
-    public @ResponseBody
-    String deployARMTemplate(@RequestPart("resource-group") @NotBlank String resourceGroupName,
-                             @RequestPart("instance-id") @NotBlank String instanceId,
-                             @RequestPart("template") @Valid MultipartFile template) {
+    public ResponseEntity<String> deployARMTemplate(@RequestPart("resource-group") @NotBlank String resourceGroupName,
+                                                    @RequestPart("instance-id") @NotBlank String instanceId,
+                                                    @RequestPart("template") @Valid MultipartFile template) {
 
         LOGGER.info("Deploy ARM Template: [" + instanceId + "] to group: " + resourceGroupName);
 
@@ -49,17 +48,15 @@ public class ControllerApi {
 
                 LOGGER.info("Successfully uploaded template [" + fileName + "] to " + templateFile.getPath());
 
-                ResourceGroup resourceGroup = azureService.createResourceGroup(resourceGroupName);
+                azureService.createResourceFromArmTemplate(templateFile, resourceGroupName, instanceId);
 
-                azureService.createResourceFromArmTemplate(templateFile, resourceGroup, instanceId);
-
-                return "You have successfully uploaded template [" + fileName + "] to " + templateFile.getPath();
+                return new ResponseEntity<>("You have successfully uploaded template [" + fileName + "] to " + templateFile.getPath() + " now processing...", HttpStatus.OK);
 
             } catch (Exception e) {
-                return "You failed to upload template [" + fileName + "] : " + e.getMessage();
+                return new ResponseEntity<>("You failed to upload template [" + fileName + "] : " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            return "Unable to upload template [" + fileName + "] - File is empty.";
+            return new ResponseEntity<>("Unable to upload template [" + fileName + "] - File is empty.", HttpStatus.BAD_REQUEST);
         }
     }
 
