@@ -3,6 +3,9 @@ package com.amplify.apc.services.azure;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.microsoft.azure.AzureEnvironment;
+import com.microsoft.azure.credentials.ApplicationTokenCredentials;
+import com.microsoft.azure.credentials.AzureTokenCredentials;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.resources.DeploymentMode;
 import com.microsoft.azure.management.resources.ResourceGroup;
@@ -10,6 +13,7 @@ import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.rest.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +27,21 @@ import java.io.InputStream;
 public class AzureService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AzureService.class);
+
+    @Value("${azure.login.clientId}")
+    private String azureClientId;
+
+    @Value("${azure.login.domain}")
+    private String azureDomain;
+
+    @Value("${azure.login.secret}")
+    private String azureSecret;
+
+    @Value("${azure.props.adminuser}")
+    private String adminUsername;
+
+    @Value("${azure.props.adminpassword}")
+    private String adminPassword;
 
     @Async
     public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId) {
@@ -43,8 +62,10 @@ public class AzureService {
 
     private Azure azureLogin() throws IOException {
         LOGGER.info("Authenticating to AZURE");
-        final File credFile = new File(System.getenv("AZURE_AUTH_LOCATION"));
-        return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credFile)
+        AzureEnvironment environment = AzureEnvironment.AZURE;
+        AzureTokenCredentials credentials = new ApplicationTokenCredentials(azureClientId, azureDomain, azureSecret, environment);
+
+        return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials)
                 .withDefaultSubscription();
     }
 
@@ -62,8 +83,8 @@ public class AzureService {
 
     private String getProperties(String instanceId) {
         String json = Json.createObjectBuilder()
-                .add("adminUsername", Json.createObjectBuilder().add("value", "azureadmin"))
-                .add("adminPassword", Json.createObjectBuilder().add("value", "AzureP@55w0rd123"))
+                .add("adminUsername", Json.createObjectBuilder().add("value", adminUsername))
+                .add("adminPassword", Json.createObjectBuilder().add("value", adminPassword))
                 .add("vmName", Json.createObjectBuilder().add("value", instanceId))
                 .build()
                 .toString();

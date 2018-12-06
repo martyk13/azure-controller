@@ -5,9 +5,18 @@ createResource() {
     if [ ! -d "../log" ]; then
         mkdir ../log
     fi
-    
-    java -Dspring.data.mongodb.uri='mongodb://localhost:27017/paf' -jar -Dresources.clients.requesturl="http://localhost:8081/deployARMTemplate" ../analysis-platform/target/analysis-platform-0.0.1-SNAPSHOT.jar >>../log/ap.log &
-    java -Dserver.port=8081 -jar ../analysis-platform-controller/target/analysis-platform-controller-0.0.1-SNAPSHOT.jar >>../log/apc.log &
+
+    # Load the auth file
+    source $AZURE_AUTH_LOCATION
+
+    java -Dspring.data.mongodb.uri='mongodb://localhost:27017/paf' -jar \
+        -Dresources.clients.requesturl="http://localhost:8081/deployARMTemplate" \
+        ../analysis-platform/target/analysis-platform-0.0.1-SNAPSHOT.jar >>../log/ap.log &
+    java -Dserver.port=8081 -jar \
+        -Dazure.login.clientId=$client \
+        -Dazure.login.domain=$tenant \
+        -Dazure.login.secret=$key \
+        ../analysis-platform-controller/target/analysis-platform-controller-0.0.1-SNAPSHOT.jar >>../log/apc.log &
 }
 
 deleteResource() {
