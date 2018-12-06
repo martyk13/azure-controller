@@ -4,25 +4,7 @@
  * license information.
  */
 
-package com.amplify.ap.controller.api;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
+package com.amplify.apc.api;
 
 import com.google.common.base.Joiner;
 import com.microsoft.azure.CloudException;
@@ -200,9 +182,25 @@ import com.microsoft.azure.management.trafficmanager.TrafficManagerAzureEndpoint
 import com.microsoft.azure.management.trafficmanager.TrafficManagerExternalEndpoint;
 import com.microsoft.azure.management.trafficmanager.TrafficManagerNestedProfileEndpoint;
 import com.microsoft.azure.management.trafficmanager.TrafficManagerProfile;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Common utils for Azure management samples.
@@ -675,6 +673,7 @@ public final class Utils {
 
     /**
      * Print management lock.
+     *
      * @param lock a management lock
      */
     public static void print(ManagementLock lock) {
@@ -1235,6 +1234,7 @@ public final class Utils {
 
     /**
      * Print an Azure Container Registry.
+     *
      * @param azureRegistry an Azure Container Registry
      */
     public static void print(Registry azureRegistry) {
@@ -1252,6 +1252,7 @@ public final class Utils {
 
     /**
      * Print an Azure Container Service.
+     *
      * @param containerService an Azure Container Service
      */
     public static void print(ContainerService containerService) {
@@ -1279,6 +1280,7 @@ public final class Utils {
 
     /**
      * Print an Azure Container Service (AKS).
+     *
      * @param kubernetesCluster a managed container service
      */
     public static void print(KubernetesCluster kubernetesCluster) {
@@ -1300,6 +1302,7 @@ public final class Utils {
 
     /**
      * Print an Azure Search Service.
+     *
      * @param searchService an Azure Search Service
      */
     public static void print(SearchService searchService) {
@@ -1330,6 +1333,7 @@ public final class Utils {
 
     /**
      * Retrieve the secondary service principal client ID.
+     *
      * @param envSecondaryServicePrincipal an Azure Container Registry
      * @return a service principal client ID
      * @throws Exception exception
@@ -1345,6 +1349,7 @@ public final class Utils {
 
     /**
      * Retrieve the secondary service principal secret.
+     *
      * @param envSecondaryServicePrincipal an Azure Container Registry
      * @return a service principal secret
      * @throws Exception exception
@@ -1360,9 +1365,10 @@ public final class Utils {
 
     /**
      * Creates and returns a randomized name based on the prefix file for use by the sample.
+     *
      * @param namePrefix The prefix string to be used in generating the name.
      * @return a random name
-     * */
+     */
     public static String createRandomName(String namePrefix) {
         return SdkContext.randomResourceName(namePrefix, 30);
     }
@@ -1371,10 +1377,10 @@ public final class Utils {
      * This method creates a certificate for given password.
      *
      * @param certPath location of certificate file
-     * @param pfxPath location of pfx file
-     * @param alias User alias
+     * @param pfxPath  location of pfx file
+     * @param alias    User alias
      * @param password alias password
-     * @param cnName domain name
+     * @param cnName   domain name
      * @throws Exception exceptions from the creation
      */
     public static void createCertificate(String certPath, String pfxPath,
@@ -1432,11 +1438,9 @@ public final class Utils {
     /**
      * This method is used for invoking native commands.
      *
-     * @param command
-     *            :- command to invoke.
-     * @param ignoreErrorStream
-     *            : Boolean which controls whether to throw exception or not
-     *            based on error stream.
+     * @param command           :- command to invoke.
+     * @param ignoreErrorStream : Boolean which controls whether to throw exception or not
+     *                          based on error stream.
      * @return result :- depending on the method invocation.
      * @throws Exception exceptions thrown from the execution
      */
@@ -1486,6 +1490,7 @@ public final class Utils {
 
     /**
      * Prints information for passed SQL Server.
+     *
      * @param sqlServer sqlServer to be printed
      */
     public static void print(SqlServer sqlServer) {
@@ -1500,6 +1505,7 @@ public final class Utils {
 
     /**
      * Prints information for the passed SQL Database.
+     *
      * @param database database to be printed
      */
     public static void print(SqlDatabase database) {
@@ -1522,6 +1528,7 @@ public final class Utils {
 
     /**
      * Prints information for the passed firewall rule.
+     *
      * @param firewallRule firewall rule to be printed.
      */
     public static void print(SqlFirewallRule firewallRule) {
@@ -1538,72 +1545,76 @@ public final class Utils {
 
     /**
      * Prints information for the passed virtual network rule.
+     *
      * @param virtualNetworkRule virtual network rule to be printed.
      */
     public static void print(SqlVirtualNetworkRule virtualNetworkRule) {
         StringBuilder builder = new StringBuilder().append("SQL virtual network rule: ").append(virtualNetworkRule.id())
-            .append("Name: ").append(virtualNetworkRule.name())
-            .append("\n\tResource group: ").append(virtualNetworkRule.resourceGroupName())
-            .append("\n\tSqlServer Name: ").append(virtualNetworkRule.sqlServerName())
-            .append("\n\tSubnet ID: ").append(virtualNetworkRule.subnetId())
-            .append("\n\tState: ").append(virtualNetworkRule.state());
+                .append("Name: ").append(virtualNetworkRule.name())
+                .append("\n\tResource group: ").append(virtualNetworkRule.resourceGroupName())
+                .append("\n\tSqlServer Name: ").append(virtualNetworkRule.sqlServerName())
+                .append("\n\tSubnet ID: ").append(virtualNetworkRule.subnetId())
+                .append("\n\tState: ").append(virtualNetworkRule.state());
 
         System.out.println(builder.toString());
     }
 
     /**
      * Prints information for the passed SQL subscription usage metric.
+     *
      * @param subscriptionUsageMetric metric to be printed.
      */
     public static void print(SqlSubscriptionUsageMetric subscriptionUsageMetric) {
         StringBuilder builder = new StringBuilder().append("SQL Subscription Usage Metric: ").append(subscriptionUsageMetric.id())
-            .append("Name: ").append(subscriptionUsageMetric.name())
-            .append("\n\tDisplay Name: ").append(subscriptionUsageMetric.displayName())
-            .append("\n\tCurrent Value: ").append(subscriptionUsageMetric.currentValue())
-            .append("\n\tLimit: ").append(subscriptionUsageMetric.limit())
-            .append("\n\tUnit: ").append(subscriptionUsageMetric.unit())
-            .append("\n\tType: ").append(subscriptionUsageMetric.type());
+                .append("Name: ").append(subscriptionUsageMetric.name())
+                .append("\n\tDisplay Name: ").append(subscriptionUsageMetric.displayName())
+                .append("\n\tCurrent Value: ").append(subscriptionUsageMetric.currentValue())
+                .append("\n\tLimit: ").append(subscriptionUsageMetric.limit())
+                .append("\n\tUnit: ").append(subscriptionUsageMetric.unit())
+                .append("\n\tType: ").append(subscriptionUsageMetric.type());
 
         System.out.println(builder.toString());
     }
 
     /**
      * Prints information for the passed SQL database usage metric.
+     *
      * @param dbUsageMetric metric to be printed.
      */
     public static void print(SqlDatabaseUsageMetric dbUsageMetric) {
         StringBuilder builder = new StringBuilder().append("SQL Database Usage Metric")
-            .append("Name: ").append(dbUsageMetric.name())
-            .append("\n\tResource Name: ").append(dbUsageMetric.resourceName())
-            .append("\n\tDisplay Name: ").append(dbUsageMetric.displayName())
-            .append("\n\tCurrent Value: ").append(dbUsageMetric.currentValue())
-            .append("\n\tLimit: ").append(dbUsageMetric.limit())
-            .append("\n\tUnit: ").append(dbUsageMetric.unit())
-            .append("\n\tNext Reset Time: ").append(dbUsageMetric.nextResetTime());
+                .append("Name: ").append(dbUsageMetric.name())
+                .append("\n\tResource Name: ").append(dbUsageMetric.resourceName())
+                .append("\n\tDisplay Name: ").append(dbUsageMetric.displayName())
+                .append("\n\tCurrent Value: ").append(dbUsageMetric.currentValue())
+                .append("\n\tLimit: ").append(dbUsageMetric.limit())
+                .append("\n\tUnit: ").append(dbUsageMetric.unit())
+                .append("\n\tNext Reset Time: ").append(dbUsageMetric.nextResetTime());
 
         System.out.println(builder.toString());
     }
 
     /**
      * Prints information for the passed SQL database metric.
+     *
      * @param dbMetric metric to be printed.
      */
     public static void print(SqlDatabaseMetric dbMetric) {
         StringBuilder builder = new StringBuilder().append("SQL Database Metric")
-            .append("Name: ").append(dbMetric.name())
-            .append("\n\tStart Time: ").append(dbMetric.startTime())
-            .append("\n\tEnd Time: ").append(dbMetric.endTime())
-            .append("\n\tTime Grain: ").append(dbMetric.timeGrain())
-            .append("\n\tUnit: ").append(dbMetric.unit());
+                .append("Name: ").append(dbMetric.name())
+                .append("\n\tStart Time: ").append(dbMetric.startTime())
+                .append("\n\tEnd Time: ").append(dbMetric.endTime())
+                .append("\n\tTime Grain: ").append(dbMetric.timeGrain())
+                .append("\n\tUnit: ").append(dbMetric.unit());
         for (SqlDatabaseMetricValue metricValue : dbMetric.metricValues()) {
             builder
-                .append("\n\tMetric Value: ")
-                .append("\n\t\tCount: ").append(metricValue.count())
-                .append("\n\t\tAverage: ").append(metricValue.average())
-                .append("\n\t\tMaximum: ").append(metricValue.maximum())
-                .append("\n\t\tMinimum: ").append(metricValue.minimum())
-                .append("\n\t\tTimestamp: ").append(metricValue.timestamp())
-                .append("\n\t\tTotal: ").append(metricValue.total());
+                    .append("\n\tMetric Value: ")
+                    .append("\n\t\tCount: ").append(metricValue.count())
+                    .append("\n\t\tAverage: ").append(metricValue.average())
+                    .append("\n\t\tMaximum: ").append(metricValue.maximum())
+                    .append("\n\t\tMinimum: ").append(metricValue.minimum())
+                    .append("\n\t\tTimestamp: ").append(metricValue.timestamp())
+                    .append("\n\t\tTotal: ").append(metricValue.total());
         }
 
         System.out.println(builder.toString());
@@ -1611,24 +1622,25 @@ public final class Utils {
 
     /**
      * Prints information for the passed Failover Group.
+     *
      * @param failoverGroup the SQL Failover Group to be printed.
      */
     public static void print(SqlFailoverGroup failoverGroup) {
         StringBuilder builder = new StringBuilder().append("SQL Failover Group: ").append(failoverGroup.id())
-            .append("Name: ").append(failoverGroup.name())
-            .append("\n\tResource group: ").append(failoverGroup.resourceGroupName())
-            .append("\n\tSqlServer Name: ").append(failoverGroup.sqlServerName())
-            .append("\n\tRead-write endpoint policy: ").append(failoverGroup.readWriteEndpointPolicy())
-            .append("\n\tData loss grace period: ").append(failoverGroup.readWriteEndpointDataLossGracePeriodMinutes())
-            .append("\n\tRead-only endpoint policy: ").append(failoverGroup.readOnlyEndpointPolicy())
-            .append("\n\tReplication state: ").append(failoverGroup.replicationState())
-            .append("\n\tReplication role: ").append(failoverGroup.replicationRole());
+                .append("Name: ").append(failoverGroup.name())
+                .append("\n\tResource group: ").append(failoverGroup.resourceGroupName())
+                .append("\n\tSqlServer Name: ").append(failoverGroup.sqlServerName())
+                .append("\n\tRead-write endpoint policy: ").append(failoverGroup.readWriteEndpointPolicy())
+                .append("\n\tData loss grace period: ").append(failoverGroup.readWriteEndpointDataLossGracePeriodMinutes())
+                .append("\n\tRead-only endpoint policy: ").append(failoverGroup.readOnlyEndpointPolicy())
+                .append("\n\tReplication state: ").append(failoverGroup.replicationState())
+                .append("\n\tReplication role: ").append(failoverGroup.replicationRole());
         builder.append("\n\tPartner Servers: ");
         for (PartnerInfo item : failoverGroup.partnerServers()) {
             builder
-                .append("\n\t\tId: ").append(item.id())
-                .append("\n\t\tLocation: ").append(item.location())
-                .append("\n\t\tReplication role: ").append(item.replicationRole());
+                    .append("\n\t\tId: ").append(item.id())
+                    .append("\n\t\tLocation: ").append(item.location())
+                    .append("\n\t\tReplication role: ").append(item.replicationRole());
         }
         builder.append("\n\tDatabases: ");
         for (String databaseId : failoverGroup.databases()) {
@@ -1640,24 +1652,26 @@ public final class Utils {
 
     /**
      * Prints information for the passed SQL server key.
+     *
      * @param serverKey virtual network rule to be printed.
      */
     public static void print(SqlServerKey serverKey) {
         StringBuilder builder = new StringBuilder().append("SQL server key: ").append(serverKey.id())
-            .append("Name: ").append(serverKey.name())
-            .append("\n\tResource group: ").append(serverKey.resourceGroupName())
-            .append("\n\tSqlServer Name: ").append(serverKey.sqlServerName())
-            .append("\n\tRegion: ").append(serverKey.region() != null ? serverKey.region().name() : "")
-            .append("\n\tServer Key Type: ").append(serverKey.serverKeyType())
-            .append("\n\tServer Key URI: ").append(serverKey.uri())
-            .append("\n\tServer Key Thumbprint: ").append(serverKey.thumbprint())
-            .append("\n\tServer Key Creation Date: ").append(serverKey.creationDate() != null ? serverKey.creationDate().toString() : "");
+                .append("Name: ").append(serverKey.name())
+                .append("\n\tResource group: ").append(serverKey.resourceGroupName())
+                .append("\n\tSqlServer Name: ").append(serverKey.sqlServerName())
+                .append("\n\tRegion: ").append(serverKey.region() != null ? serverKey.region().name() : "")
+                .append("\n\tServer Key Type: ").append(serverKey.serverKeyType())
+                .append("\n\tServer Key URI: ").append(serverKey.uri())
+                .append("\n\tServer Key Thumbprint: ").append(serverKey.thumbprint())
+                .append("\n\tServer Key Creation Date: ").append(serverKey.creationDate() != null ? serverKey.creationDate().toString() : "");
 
         System.out.println(builder.toString());
     }
 
     /**
      * Prints information of the elastic pool passed in.
+     *
      * @param elasticPool elastic pool to be printed
      */
     public static void print(SqlElasticPool elasticPool) {
@@ -1679,6 +1693,7 @@ public final class Utils {
 
     /**
      * Prints information of the elastic pool activity.
+     *
      * @param elasticPoolActivity elastic pool activity to be printed
      */
     public static void print(ElasticPoolActivity elasticPoolActivity) {
@@ -1704,6 +1719,7 @@ public final class Utils {
 
     /**
      * Prints information of the database activity.
+     *
      * @param databaseActivity database activity to be printed
      */
     public static void print(ElasticPoolDatabaseActivity databaseActivity) {
@@ -1726,6 +1742,7 @@ public final class Utils {
 
     /**
      * Print an application gateway.
+     *
      * @param resource an application gateway
      */
     public static void print(ApplicationGateway resource) {
@@ -1976,9 +1993,10 @@ public final class Utils {
 
     /**
      * Uploads a file to an Azure web app.
-     * @param profile the publishing profile for the web app.
+     *
+     * @param profile  the publishing profile for the web app.
      * @param fileName the name of the file on server
-     * @param file the local file
+     * @param file     the local file
      */
     public static void uploadFileToWebApp(PublishingProfile profile, String fileName, InputStream file) {
         FTPClient ftpClient = new FTPClient();
@@ -2009,9 +2027,10 @@ public final class Utils {
 
     /**
      * Uploads a file to an Azure function app.
-     * @param profile the publishing profile for the web app.
+     *
+     * @param profile  the publishing profile for the web app.
      * @param fileName the name of the file on server
-     * @param file the local file
+     * @param file     the local file
      */
     public static void uploadFileToFunctionApp(PublishingProfile profile, String fileName, InputStream file) {
         FTPClient ftpClient = new FTPClient();
@@ -2042,9 +2061,10 @@ public final class Utils {
 
     /**
      * Uploads a file to an Azure web app.
-     * @param profile the publishing profile for the web app.
+     *
+     * @param profile  the publishing profile for the web app.
      * @param fileName the name of the file on server
-     * @param file the local file
+     * @param file     the local file
      */
     public static void uploadFileToWebAppWwwRoot(PublishingProfile profile, String fileName, InputStream file) {
         FTPClient ftpClient = new FTPClient();
@@ -2079,6 +2099,7 @@ public final class Utils {
 
     /**
      * Print service bus namespace info.
+     *
      * @param serviceBusNamespace a service bus namespace
      */
     public static void print(ServiceBusNamespace serviceBusNamespace) {
@@ -2101,6 +2122,7 @@ public final class Utils {
 
     /**
      * Print service bus queue info.
+     *
      * @param queue a service bus queue
      */
     public static void print(Queue queue) {
@@ -2138,6 +2160,7 @@ public final class Utils {
 
     /**
      * Print service bus queue authorization keys info.
+     *
      * @param queueAuthorizationRule a service bus queue authorization keys
      */
     public static void print(QueueAuthorizationRule queueAuthorizationRule) {
@@ -2150,7 +2173,7 @@ public final class Utils {
 
         List<AccessRights> rights = queueAuthorizationRule.rights();
         builder.append("\n\tNumber of access rights in queue: ").append(rights.size());
-        for (AccessRights right: rights) {
+        for (AccessRights right : rights) {
             builder.append("\n\t\tAccessRight: ")
                     .append("\n\t\t\tName :").append(right.name());
         }
@@ -2160,6 +2183,7 @@ public final class Utils {
 
     /**
      * Print service bus namespace authorization keys info.
+     *
      * @param keys a service bus namespace authorization keys
      */
     public static void print(AuthorizationKeys keys) {
@@ -2175,6 +2199,7 @@ public final class Utils {
 
     /**
      * Print service bus namespace authorization rule info.
+     *
      * @param namespaceAuthorizationRule a service bus namespace authorization rule
      */
     public static void print(NamespaceAuthorizationRule namespaceAuthorizationRule) {
@@ -2186,7 +2211,7 @@ public final class Utils {
 
         List<AccessRights> rights = namespaceAuthorizationRule.rights();
         builder.append("\n\tNumber of access rights in queue: ").append(rights.size());
-        for (AccessRights right: rights) {
+        for (AccessRights right : rights) {
             builder.append("\n\t\tAccessRight: ")
                     .append("\n\t\t\tName :").append(right.name());
         }
@@ -2196,6 +2221,7 @@ public final class Utils {
 
     /**
      * Print service bus topic info.
+     *
      * @param topic a service bus topic
      */
     public static void print(Topic topic) {
@@ -2228,6 +2254,7 @@ public final class Utils {
 
     /**
      * Print service bus subscription info.
+     *
      * @param serviceBusSubscription a service bus subscription
      */
     public static void print(ServiceBusSubscription serviceBusSubscription) {
@@ -2259,6 +2286,7 @@ public final class Utils {
 
     /**
      * Print topic Authorization Rule info.
+     *
      * @param topicAuthorizationRule a topic Authorization Rule
      */
     public static void print(TopicAuthorizationRule topicAuthorizationRule) {
@@ -2271,7 +2299,7 @@ public final class Utils {
 
         List<AccessRights> rights = topicAuthorizationRule.rights();
         builder.append("\n\tNumber of access rights in queue: ").append(rights.size());
-        for (AccessRights right: rights) {
+        for (AccessRights right : rights) {
             builder.append("\n\t\tAccessRight: ")
                     .append("\n\t\t\tName :").append(right.name());
         }
@@ -2281,6 +2309,7 @@ public final class Utils {
 
     /**
      * Print CosmosDB info.
+     *
      * @param cosmosDBAccount a CosmosDB
      */
     public static void print(CosmosDBAccount cosmosDBAccount) {
@@ -2295,10 +2324,10 @@ public final class Utils {
         DatabaseAccountListKeysResult keys = cosmosDBAccount.listKeys();
         DatabaseAccountListReadOnlyKeysResult readOnlyKeys = cosmosDBAccount.listReadOnlyKeys();
         builder
-            .append("\n\tPrimary Master Key: ").append(keys.primaryMasterKey())
-            .append("\n\tSecondary Master Key: ").append(keys.secondaryMasterKey())
-            .append("\n\tPrimary Read-Only Key: ").append(readOnlyKeys.primaryReadonlyMasterKey())
-            .append("\n\tSecondary Read-Only Key: ").append(readOnlyKeys.secondaryReadonlyMasterKey());
+                .append("\n\tPrimary Master Key: ").append(keys.primaryMasterKey())
+                .append("\n\tSecondary Master Key: ").append(keys.secondaryMasterKey())
+                .append("\n\tPrimary Read-Only Key: ").append(readOnlyKeys.primaryReadonlyMasterKey())
+                .append("\n\tSecondary Read-Only Key: ").append(readOnlyKeys.secondaryReadonlyMasterKey());
 
         for (com.microsoft.azure.management.cosmosdb.Location writeReplica : cosmosDBAccount.writableReplications()) {
             builder.append("\n\t\tWrite replication: ")
@@ -2315,6 +2344,7 @@ public final class Utils {
 
     /**
      * Print Active Directory User info.
+     *
      * @param user active directory user
      */
     public static void print(ActiveDirectoryUser user) {
@@ -2331,6 +2361,7 @@ public final class Utils {
 
     /**
      * Print Active Directory User info.
+     *
      * @param role role definition
      */
     public static void print(RoleDefinition role) {
@@ -2367,6 +2398,7 @@ public final class Utils {
 
     /**
      * Print Role Assignment info.
+     *
      * @param roleAssignment role assignment
      */
     public static void print(RoleAssignment roleAssignment) {
@@ -2381,6 +2413,7 @@ public final class Utils {
 
     /**
      * Print Active Directory Group info.
+     *
      * @param group active directory group
      */
     public static void print(ActiveDirectoryGroup group) {
@@ -2401,6 +2434,7 @@ public final class Utils {
 
     /**
      * Print Active Directory Application info.
+     *
      * @param application active directory application
      */
     public static void print(ActiveDirectoryApplication application) {
@@ -2630,14 +2664,14 @@ public final class Utils {
         }
         if (resource.volumes() != null) {
             info.append("\n\tVolume mapping: ");
-            for (Map.Entry<String, Volume> entry: resource.volumes().entrySet()) {
+            for (Map.Entry<String, Volume> entry : resource.volumes().entrySet()) {
                 info.append("\n\t\tName: ").append(entry.getKey()).append(" -> ")
-                    .append(entry.getValue().azureFile() != null ? entry.getValue().azureFile().shareName() : "empty direcory volume");
+                        .append(entry.getValue().azureFile() != null ? entry.getValue().azureFile().shareName() : "empty direcory volume");
             }
         }
         if (resource.containers() != null) {
             info.append("\n\tContainer instances: ");
-            for (Map.Entry<String, Container> entry: resource.containers().entrySet()) {
+            for (Map.Entry<String, Container> entry : resource.containers().entrySet()) {
                 Container container = entry.getValue();
                 info.append("\n\t\tName: ").append(entry.getKey()).append(" -> ").append(container.image());
                 info.append("\n\t\t\tResources: ");
@@ -3108,11 +3142,11 @@ public final class Utils {
         }
         System.out.println(info.toString());
     }
+
     private static OkHttpClient httpClient;
 
     /**
      * Ensure the HTTP client is valid.
-     *
      */
     private static OkHttpClient ensureValidHttpClient() {
         if (httpClient == null) {

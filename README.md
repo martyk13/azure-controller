@@ -5,8 +5,9 @@
 - Docker
 - MongoDB
 - An Azure account (and azure cli installed locally)
+- Create the auth file and export the path as described here: [Azure setup guide](https://docs.microsoft.com/en-us/java/azure/java-sdk-azure-get-started?view=azure-java-stable)
 ## Build
-Navigate to the directory containing the **pom.xml** file and run the following command:
+Navigate to the directories containing the **pom.xml** file and run the following command:
 ```
 mvn clean install
 ```
@@ -19,9 +20,14 @@ kenesys/analysis-platform   0.0.1-SNAPSHOT      e4b64855a448        19 hours ago
 ## Running
 The application can either be run locally using :
 ```
-java -Dspring.data.mongodb.uri='mongodb://localhost:27017/apdb' -jar target/analysis-platform-0.0.1-SNAPSHOT.jar
+scripts/local-deploy.sh --start
+```
+And stopped using
+```
+scripts/local-deploy.sh --stop
 ```
 And navigating to *http://localhost:8080/swagger-ui.html*
+this will direct any logging output to the files in the */log* directory
 
 or pushed and deployed to azure using the script provided in the 'scripts' directory:
 ```
@@ -29,5 +35,5 @@ or pushed and deployed to azure using the script provided in the 'scripts' direc
 ./deploy-to-azure.sh --create
 
 # Remove the Azure deployment
-./deploy-to-azure.sh
+./deploy-to-azure.sh --delete
 ```

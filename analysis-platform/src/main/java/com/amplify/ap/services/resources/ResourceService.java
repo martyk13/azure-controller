@@ -13,6 +13,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 @Service
 public class ResourceService {
@@ -25,7 +27,7 @@ public class ResourceService {
     @Value("${resources.clients.requesturl}")
     private String resourceRequestUrl;
 
-    public void requestResource(String resourceGroup, String instanceId, File template) {
+    public void requestResource(String resourceGroup, String instanceId, File template) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("Requesting new resource from ");
         sb.append(resourceRequestUrl);
@@ -38,14 +40,21 @@ public class ResourceService {
         sb.append("}");
         LOGGER.info(sb.toString());
 
+        // Set request header
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        // Cretae file and content disposition
+        LinkedMultiValueMap<String, String> pdfHeaderMap = new LinkedMultiValueMap<>();
+        pdfHeaderMap.add("Content-disposition", "form-data; name=template; filename=" + template.getName());
+        pdfHeaderMap.add("Content-type", "application/octet-stream");
+        HttpEntity<byte[]> templateEntity = new HttpEntity<byte[]>(Files.readAllBytes(template.toPath()), pdfHeaderMap);
 
         MultiValueMap<String, Object> body
                 = new LinkedMultiValueMap<>();
         body.add("resource-group", resourceGroup);
         body.add("instance-id", instanceId);
-        body.add("file", template);
+        body.add("template", templateEntity);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity
                 = new HttpEntity<>(body, headers);
