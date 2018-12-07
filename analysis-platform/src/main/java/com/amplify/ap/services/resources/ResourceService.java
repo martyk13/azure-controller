@@ -6,11 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponents;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +31,7 @@ public class ResourceService {
     @Value("${resources.clients.requesturl}")
     private String resourceRequestUrl;
 
-    public void requestResource(String resourceGroup, String instanceId, File template) throws IOException {
+    public HttpStatus requestResource(String resourceGroup, String instanceId, File template) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("Requesting new resource from ");
         sb.append(resourceRequestUrl);
@@ -50,15 +54,20 @@ public class ResourceService {
         pdfHeaderMap.add("Content-type", "application/octet-stream");
         HttpEntity<byte[]> templateEntity = new HttpEntity<byte[]>(Files.readAllBytes(template.toPath()), pdfHeaderMap);
 
+        // Get the request URL to respond to once processing has finished
+        UriComponents requestUri = ServletUriComponentsBuilder.fromCurrentRequestUri().build();
+
         MultiValueMap<String, Object> body
                 = new LinkedMultiValueMap<>();
         body.add("resource-group", resourceGroup);
         body.add("instance-id", instanceId);
+        body.add("response-url", requestUri.toUriString());
         body.add("template", templateEntity);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity
                 = new HttpEntity<>(body, headers);
 
-        restTemplate.postForEntity(resourceRequestUrl, requestEntity, String.class);
+        ResponseEntity response = restTemplate.postForEntity(resourceRequestUrl, requestEntity, String.class);
+        return response.getStatusCode();
     }
 }
