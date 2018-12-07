@@ -74,7 +74,9 @@ public class ResourcesApi {
     }
 
     @RequestMapping(value = "/{id}/{instance-id}", method = RequestMethod.PUT)
-    public void updateInstanceStatus(@PathVariable String id, @PathVariable String instanceId, @RequestParam(name = "status") TemplateInstanceStatus status) {
+    public void updateInstanceStatus(@PathVariable(name = "id") String id,
+                                     @PathVariable(name = "instance-id") String instanceId,
+                                     @RequestParam(name = "status") TemplateInstanceStatus status) {
         if (resourceDao.existsById(id)) {
             Resource resource = resourceDao.findById(id).get();
             if (resource.getTemplateInstances().containsKey(instanceId)) {

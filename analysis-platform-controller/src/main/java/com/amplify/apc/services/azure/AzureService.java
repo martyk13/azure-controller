@@ -48,7 +48,7 @@ public class AzureService {
     private ResponseService responseService;
 
     @Async
-    public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId, String requestOrigin) {
+    public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId, String responseUrl) {
         try {
             String templateJson = getTemplate(template);
 
@@ -59,10 +59,10 @@ public class AzureService {
             azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup).withTemplate(templateJson)
                     .withParameters(getProperties(instanceId)).withMode(DeploymentMode.INCREMENTAL).create();
             LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
-            responseService.updateStatus(requestOrigin, resourceGroupName, instanceId, "FINISHED");
+            responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-            responseService.updateStatus(requestOrigin, resourceGroupName, instanceId, "FAILED");
+            responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
         }
     }
 
