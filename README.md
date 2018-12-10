@@ -31,8 +31,32 @@ this will direct any logging output to the files in the */log* directory
 
 or pushed and deployed to azure using the script provided in the 'scripts' directory:
 ```
-# Create the Azure deployment
-./deploy-to-azure.sh --create
+# Configuration options - set in your environment before running script - setting ${AZ_REGION} and ${AZ_NAME_QUALIFIER} should suffice
+
+// The Azure region in which to create the resources (default eastus)
+export AZ_REGION=westeurope
+
+// A qualifer to append to resource names in Azure (default empty)
+export AZ_NAME_QUALIFIER="your-name-qualifier-with-no-special-chars"
+
+// The name of the Resource Group (default analysisPlatformGroup) -  (will have the ${AZ_NAME_QUALIFIER} appended)
+export AZ_RG_NAME=analysisPlatformGroup
+
+// The name of the private Docker Container repo (default analysisPlatformRepo) -  (will have the ${AZ_NAME_QUALIFIER} appended)
+export AZ_DOCKER_REPO=analysisPlatformRepo
+
+// The name of the cosmosDB (runs in MongoDB mode) (default apdb) -  (will have the ${AZ_NAME_QUALIFIER} appended)
+export AZ_MONGO_DB=${AZ_MONGO_DB:-apdb}
+
+// The version of the Analysis Platform components to use
+export AP_VERSION=0.0.1-SNAPSHOT
+export APC_VERSION=${AP_VERSION}
+
+// The Azure Tag version qualifier
+export AP_TAG=v0.1
+
+# Create the Azure deployment (with optional debug output)
+./deploy-to-azure.sh [--debug] --create
 
 # Remove the Azure deployment
 ./deploy-to-azure.sh --delete
