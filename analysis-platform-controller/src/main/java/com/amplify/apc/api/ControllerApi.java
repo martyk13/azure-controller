@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,6 +20,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
+import java.util.List;
 
 @RestController
 public class ControllerApi {
@@ -60,6 +63,12 @@ public class ControllerApi {
         } else {
             return new ResponseEntity<>("Unable to upload template [" + fileName + "] - File is empty.", HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @RequestMapping(value = "/deployARMTemplate/{resource-group}", method = RequestMethod.DELETE)
+    public void deleteResourceGroup(@PathVariable(name = "resource-group") String resourceGroupName, @RequestBody List<String> instanceIds) {
+        LOGGER.info("Request received to delete resource group {}", resourceGroupName);
+
     }
 
 }

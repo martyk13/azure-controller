@@ -1,11 +1,13 @@
 package com.amplify.ap.services.resources;
 
+import com.amplify.ap.domain.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import org.springframework.web.util.UriComponents;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Set;
 
 @Service
 public class ResourceService {
@@ -68,6 +71,14 @@ public class ResourceService {
                 = new HttpEntity<>(body, headers);
 
         ResponseEntity response = restTemplate.postForEntity(resourceRequestUrl, requestEntity, String.class);
+        return response.getStatusCode();
+    }
+
+    public HttpStatus deleteResource(Resource resource) {
+        LOGGER.info("Sending request to delete Resource Group: {}", resource.getResourceGroup());
+
+        HttpEntity<Set<String>> request = new HttpEntity<Set<String>>(resource.getTemplateInstances().keySet());
+        ResponseEntity response = restTemplate.exchange(resourceRequestUrl + "/" + resource.getResourceGroup(), HttpMethod.DELETE, request, ResponseEntity.class);
         return response.getStatusCode();
     }
 }
