@@ -76,7 +76,7 @@ public class AzureService {
             resourceGroup = azure.resourceGroups().getByName(resourceGroupName);
         } else {
             LOGGER.info("Creating a new resource group with name: " + resourceGroupName);
-            resourceGroup = azure.resourceGroups().define(resourceGroupName).withRegion(Region.US_EAST).create();
+            resourceGroup = azure.resourceGroups().define(resourceGroupName).withRegion(Region.UK_WEST).create();
         }
         return resourceGroup;
     }

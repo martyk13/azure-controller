@@ -42,24 +42,24 @@ public class TemplatesApi {
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public Template getTemplate(@PathVariable String id) {
+    public Template getTemplate(@PathVariable (name="id") String id) {
         return templateDao.findById(id).get();
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    public void deleteTemplate(@PathVariable String id) {
+    public void deleteTemplate(@PathVariable(name="id") String id) {
         templateDao.deleteById(id);
     }
 
     @RequestMapping(value = "/{id}/description", method = RequestMethod.PUT)
-    public void updateTemplateDescription(@PathVariable String id, @RequestBody Template template) {
+    public void updateTemplateDescription(@PathVariable(name="id") String id, @RequestBody Template template) {
         Template toUpdate = templateDao.findById(id).get();
         toUpdate.setDescription(template.getDescription());
         templateDao.save(toUpdate);
     }
 
     @RequestMapping(value = "/{id}/file", method = RequestMethod.GET)
-    public ResponseEntity<Resource> getTemplateFile(@PathVariable String id) throws IOException {
+    public ResponseEntity<Resource> getTemplateFile(@PathVariable(name="id") String id) throws IOException {
         File templateFile = templateService.getTemplateFile(id);
         LOGGER.info("Returning file {} for template {}", templateFile.getName(), id);
 
