@@ -16,7 +16,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponents;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,14 +56,11 @@ public class ResourceService {
         pdfHeaderMap.add("Content-type", "application/octet-stream");
         HttpEntity<byte[]> templateEntity = new HttpEntity<byte[]>(Files.readAllBytes(template.toPath()), pdfHeaderMap);
 
-        // Get the request URL to respond to once processing has finished
-        UriComponents requestUri = ServletUriComponentsBuilder.fromCurrentRequestUri().build();
-
         MultiValueMap<String, Object> body
                 = new LinkedMultiValueMap<>();
         body.add("resource-group", resourceGroup);
         body.add("instance-id", instanceId);
-        body.add("response-url", requestUri.toUriString());
+        body.add("response-url", getResponseUrl());
         body.add("template", templateEntity);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity
@@ -77,8 +73,15 @@ public class ResourceService {
     public HttpStatus deleteResource(Resource resource) {
         LOGGER.info("Sending request to delete Resource Group: {}", resource.getResourceGroup());
 
+        String requestUrl = resourceRequestUrl + "/" + resource.getResourceGroup() + "?response-url=" + getResponseUrl();
+
         HttpEntity<Set<String>> request = new HttpEntity<Set<String>>(resource.getTemplateInstances().keySet());
-        ResponseEntity response = restTemplate.exchange(resourceRequestUrl + "/" + resource.getResourceGroup(), HttpMethod.DELETE, request, ResponseEntity.class);
+        ResponseEntity response = restTemplate.exchange(requestUrl, HttpMethod.DELETE, request, ResponseEntity.class);
         return response.getStatusCode();
+    }
+
+    private String getResponseUrl() {
+        // Get the request URL to respond to once processing has finished
+        return ServletUriComponentsBuilder.fromCurrentRequestUri().build().getHost();
     }
 }

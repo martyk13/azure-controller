@@ -66,9 +66,9 @@ public class ControllerApi {
     }
 
     @RequestMapping(value = "/deployARMTemplate/{resource-group}", method = RequestMethod.DELETE)
-    public void deleteResourceGroup(@PathVariable(name = "resource-group") String resourceGroupName, @RequestBody List<String> instanceIds) {
+    public void deleteResourceGroup(@PathVariable(name = "resource-group") String resourceGroupName, @RequestParam(name = "response-url") String responseUrl, @RequestBody List<String> instanceIds) {
         LOGGER.info("Request received to delete resource group {}", resourceGroupName);
-
+        azureService.deleteResourceGroup(resourceGroupName, instanceIds, responseUrl);
     }
 
 }
