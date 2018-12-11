@@ -33,7 +33,7 @@ createResource() {
     DEBUG "Creating cosmosdb ${AZ_MONGO_DB} (mongo mode)"
     az cosmosdb create --name ${AZ_MONGO_DB} --resource-group ${AZ_RG_NAME} --kind MongoDB
     DB_KEY=`az cosmosdb list-keys --name ${AZ_MONGO_DB} --resource-group ${AZ_RG_NAME} --query "primaryMasterKey"`
-    MONGODB_URI="mongodb://${AZ_MONGO_DB}:${DB_KEY//\"}@${AZ_MONGO_DB}:10255/ap?ssl=true&sslverifycertificate=false"
+    MONGODB_URI="mongodb://${AZ_MONGO_DB}:${DB_KEY//\"}@${AZ_MONGO_DB}.documents.azure.com:10255/ap?ssl=true&sslverifycertificate=false"
 
     # Create private docker repo in resource group and push the image
     DEBUG "Creating private docker repo ${AZ_DOCKER_REPO}"

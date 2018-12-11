@@ -19,8 +19,8 @@ public class ResponseService {
 
     public void updateStatus(String responseUrl, String resourceGroup, String instanceId, String status) {
         StringBuilder uriStringBuilder = new StringBuilder();
-        uriStringBuilder.append(responseUrl);
-        uriStringBuilder.append("/" + resourceGroup + "/" + instanceId);
+        uriStringBuilder.append("http://" + responseUrl + ":8080");
+        uriStringBuilder.append("/resources/" + resourceGroup + "/" + instanceId);
         uriStringBuilder.append("?status=" + status);
 
         URI updateStatusUrl = URI.create(uriStringBuilder.toString());

@@ -73,6 +73,20 @@ public class ResourcesApi {
         }
     }
 
+    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+    public void deleteResources(@RequestParam(name = "id") String id) {
+        if (resourceDao.existsById(id)) {
+            Resource resource = resourceDao.findById(id).get();
+            resourceService.deleteResource(resource);
+            for (String instanceID : resource.getTemplateInstances().keySet()) {
+                resource.getTemplateInstances().get(instanceID).setStatus(TemplateInstanceStatus.DELETING);
+            }
+            resourceDao.save(resource);
+        } else {
+            throw new IllegalArgumentException("Resource group: " + id + " does not exist");
+        }
+    }
+
     @RequestMapping(value = "/{id}/{instance-id}", method = RequestMethod.PUT)
     public void updateInstanceStatus(@PathVariable(name = "id") String id,
                                      @PathVariable(name = "instance-id") String instanceId,

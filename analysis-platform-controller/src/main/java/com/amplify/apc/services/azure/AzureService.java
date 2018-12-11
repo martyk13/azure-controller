@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 @Service
 public class AzureService {
@@ -63,6 +64,23 @@ public class AzureService {
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+        }
+    }
+
+    @Async
+    public void deleteResourceGroup(String resourceGroupName, List<String> instanceIds, String responseUrl) {
+        try {
+            Azure azure = azureLogin();
+            LOGGER.info("Deleting resource group: {}", resourceGroupName);
+            azure.resourceGroups().deleteByName(resourceGroupName);
+            for (String instanceId : instanceIds) {
+                responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            for (String instanceId : instanceIds) {
+                responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+            }
         }
     }
 
