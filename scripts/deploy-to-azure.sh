@@ -5,8 +5,10 @@ AZ_NAME_QUALIFIER=${AZ_NAME_QUALIFIER:-}
 AZ_RG_NAME=${AZ_RG_NAME:-analysisPlatformGroup}${AZ_NAME_QUALIFIER}
 AZ_DOCKER_REPO=${AZ_DOCKER_REPO:-analysisPlatformRepo}${AZ_NAME_QUALIFIER}
 AZ_MONGO_DB=${AZ_MONGO_DB:-apdb}${AZ_NAME_QUALIFIER}
-AZ_AP_DEPLOY_NAME=${AZ_AP_DEPLOY_NAME:-analysis-platform}${AZ_NAME_QUALIFIER}
-AZ_APC_DEPLOY_NAME=${AZ_AP_DEPLOY_NAME:-analysis-platform-controller}${AZ_NAME_QUALIFIER}
+AZ_AP_NAME=${AZ_AP_NAME:-analysis-platform}
+AZ_AP_DEPLOY_NAME=${AZ_AP_DEPLOY_NAME:-${AZ_AP_NAME}}${AZ_NAME_QUALIFIER}
+AZ_APC_NAME=${AZ_AP_NAME:-analysis-platform-controller}
+AZ_APC_DEPLOY_NAME=${AZ_APC_DEPLOY_NAME:-${AZ_APC_NAME}}${AZ_NAME_QUALIFIER}
 AP_VERSION=${AP_VERSION:-0.0.1-SNAPSHOT}
 APC_VERSION=${AP_VERSION}
 AP_TAG=${AP_TAG:-v0.1}
@@ -41,11 +43,11 @@ createResource() {
 
     # Tag and push the AP
     DEBUG "Tagging and pushing the Analysis Platform"
-    docker tag amplify/analysis-platform:${AP_VERSION} ${NAMESPACE//\"}/amplify/${AZ_AP_DEPLOY_NAME}:${AP_TAG}
+    docker tag amplify/${AZ_AP_NAME}:${AP_VERSION} ${NAMESPACE//\"}/amplify/${AZ_AP_DEPLOY_NAME}:${AP_TAG}
     docker push ${NAMESPACE//\"}/amplify/${AZ_AP_DEPLOY_NAME}:${AP_TAG}
     # Tag and push the APC
     DEBUG "Tagging and pushing the Analysis Platform Controller"
-    docker tag amplify/analysis-platform-controller:${APC_VERSION} ${NAMESPACE//\"}/amplify/${AZ_APC_DEPLOY_NAME}:${AP_TAG}
+    docker tag amplify/${AZ_APC_NAME}:${APC_VERSION} ${NAMESPACE//\"}/amplify/${AZ_APC_DEPLOY_NAME}:${AP_TAG}
     docker push ${NAMESPACE//\"}/amplify/${AZ_APC_DEPLOY_NAME}:${AP_TAG}
 
     PASSWORD=`az acr credential show --name ${AZ_DOCKER_REPO} --query "passwords[0].value"`
@@ -53,7 +55,7 @@ createResource() {
     source $AZURE_AUTH_LOCATION
 
     # Start the AP container instance
-    DEBUG "Starting the Analysis Platform Controller container instance"
+    DEBUG "Starting the Analysis Platform Controller container instance ${AZ_APC_DEPLOY_NAME}"
     az container create \
         --resource-group ${AZ_RG_NAME} \
         --name ${AZ_APC_DEPLOY_NAME} \
@@ -72,7 +74,7 @@ createResource() {
     APC_IP=`az container show --name ${AZ_APC_DEPLOY_NAME} --resource-group ${AZ_RG_NAME} | jq -r '.ipAddress.ip'`
 
     # Start the AP container instance
-    DEBUG "Starting the Analysis Platform container instance"
+    DEBUG "Starting the Analysis Platform container instance ${AZ_AP_DEPLOY_NAME}"
     az container create \
         --resource-group ${AZ_RG_NAME} \
         --name ${AZ_AP_DEPLOY_NAME} \
