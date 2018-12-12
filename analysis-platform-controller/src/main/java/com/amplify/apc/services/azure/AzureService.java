@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -96,23 +97,37 @@ public class AzureService {
 
     private Azure azureLogin() {
         LOGGER.info("Authenticating to AZURE");
-        AzureEnvironment environment = AzureEnvironment.AZURE;
-        AzureTokenCredentials credentials = new ApplicationTokenCredentials(azureClientId, azureDomain, azureSecret, environment);
+        AzureEnvironment stackEnvironment = new AzureEnvironment(new HashMap<>() {
+            {
+                put("managementEndpointUrl", settings.get("audience"));
+                put("resourceManagerEndpointUrl", armEndpoint);
+                put("galleryEndpointUrl", settings.get("galleryEndpoint"));
+                put("activeDirectoryEndpointUrl", settings.get("login_endpoint"));
+                put("activeDirectoryResourceId", settings.get("audience"));
+                put("activeDirectoryGraphResourceId", settings.get("graphEndpoint"));
+                put("storageEndpointSuffix", armEndpoint.substring(armEndpoint.indexOf('.')));
+                put("keyVaultDnsSuffix", ".vault" + armEndpoint.substring(armEndpoint.indexOf('.')));
+            }
+        });
+        AzureTokenCredentials credentials = new ApplicationTokenCredentials(azureClientId, azureDomain, azureSecret, stackEnvironment);
 
         return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials)
                 .withDefaultSubscription();
     }
 
-    private ResourceGroup getResourceGroup(Azure azure, String resourceGroupName) throws IOException {
-        //ResourceGroup resourceGroup;
-        azure.resourceGroups().getAsync(resourceGroupName).doOnCompleted((resourceGroup) -> {
-            //checkExistence(resourceGroupName)) {
-            //LOGGER.info("Getting an exisiting resource group with name: " + resourceGroupName);
-            return resourceGroup;
-        }).doOnError((throwable) -> {
-            LOGGER.info("Creating a new resource group with name: " + resourceGroupName);
-            return azure.resourceGroups().define(resourceGroupName).withExistingSubscription().withLocation(Region.US_EAST.name()).create();
-        });
+    private void getResourceGroup(Azure azure, String resourceGroupName) throws IOException {
+        try {
+            List<ResourceGroup> resourceGroups = azure.resourceGroups().listAsync()
+                    .toList()
+                    .toBlocking()
+                    .last();
+            if (!resourceGroups.contains(resourceGroupName)) {
+                LOGGER.info("Creating a new resource group with name: " + resourceGroupName);
+                azure.resourceGroups().define(resourceGroupName).withExistingSubscription().withLocation(Region.US_EAST.name()).create();
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
     }
 
     private String getProperties(String instanceId) {
