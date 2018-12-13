@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.AzureEnvironment;
-import com.microsoft.azure.arm.resources.Region;
+import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.credentials.AzureTokenCredentials;
 import com.microsoft.azure.management.profile_2018_03_01_hybrid.Azure;
 import com.microsoft.azure.management.resources.v2018_02_01.DeploymentMode;
@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -55,15 +54,14 @@ public class AzureService {
             String templateJson = getTemplate(template);
 
             Azure azure = azureLogin();
-            ResourceGroup resourceGroup = getResourceGroup(azure, resourceGroupName);
+            createResourceGroup(azure, resourceGroupName);
 
             LOGGER.info("Starting a deployment for an Azure App Service: " + instanceId);
             DeploymentProperties dp = new DeploymentProperties();
             dp.withTemplate(templateJson).withParameters(getProperties(instanceId)).withMode(DeploymentMode.INCREMENTAL);
 
-            azure.deployments().define(instanceId).withResourceGroupName(resourceGroupName).withProperties(dp);
-            //withTemplate(templateJson)
-            //.withParameters(getProperties(instanceId)).withMode(DeploymentMode.INCREMENTAL).create();
+            azure.deployments().define(instanceId).withResourceGroupName(resourceGroupName).withProperties(dp).create();
+
             LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
             responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
         } catch (Exception e) {
@@ -77,16 +75,12 @@ public class AzureService {
         try {
             Azure azure = azureLogin();
             LOGGER.info("Deleting resource group: {}", resourceGroupName);
-            azure.resourceGroups().deleteAsync(resourceGroupName).doOnCompleted(() -> {
-                for (String instanceId : instanceIds) {
-                    responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
-                }
-            }).doOnError((throwable) -> {
-                LOGGER.error(throwable.getMessage());
-                for (String instanceId : instanceIds) {
-                    responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
-                }
-            });
+            azure.resourceGroups().deleteAsync(resourceGroupName).await();
+
+            LOGGER.info("Deleting resource complete, updating status of resources");
+            for (String instanceId : instanceIds) {
+                responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
+            }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             for (String instanceId : instanceIds) {
@@ -97,7 +91,7 @@ public class AzureService {
 
     private Azure azureLogin() {
         LOGGER.info("Authenticating to AZURE");
-        AzureEnvironment stackEnvironment = new AzureEnvironment(new HashMap<>() {
+        /*AzureEnvironment stackEnvironment = new AzureEnvironment(new HashMap<>() {
             {
                 put("managementEndpointUrl", settings.get("audience"));
                 put("resourceManagerEndpointUrl", armEndpoint);
@@ -108,20 +102,22 @@ public class AzureService {
                 put("storageEndpointSuffix", armEndpoint.substring(armEndpoint.indexOf('.')));
                 put("keyVaultDnsSuffix", ".vault" + armEndpoint.substring(armEndpoint.indexOf('.')));
             }
-        });
+        });*/
+        
         AzureTokenCredentials credentials = new ApplicationTokenCredentials(azureClientId, azureDomain, azureSecret, stackEnvironment);
 
         return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials)
                 .withDefaultSubscription();
     }
 
-    private void getResourceGroup(Azure azure, String resourceGroupName) throws IOException {
+    private void createResourceGroup(Azure azure, String resourceGroupName) throws IOException {
         try {
+            LOGGER.info("Querying existing resource group names...");
             List<ResourceGroup> resourceGroups = azure.resourceGroups().listAsync()
                     .toList()
                     .toBlocking()
                     .last();
-            if (!resourceGroups.contains(resourceGroupName)) {
+            if (resourceGroups == null || !resourceGroups.contains(resourceGroupName)) {
                 LOGGER.info("Creating a new resource group with name: " + resourceGroupName);
                 azure.resourceGroups().define(resourceGroupName).withExistingSubscription().withLocation(Region.US_EAST.name()).create();
             }
