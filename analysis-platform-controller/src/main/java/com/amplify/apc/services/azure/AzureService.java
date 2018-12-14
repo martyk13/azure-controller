@@ -77,7 +77,7 @@ public class AzureService {
             createResourceGroup(azure, resourceGroupName);
 
             DeploymentProperties deploymentProperties = new DeploymentProperties();
-            deploymentProperties.withTemplate(templateJson)
+            deploymentProperties.withTemplate(template)
                     .withParameters(getProperties(instanceId))
                     .withMode(DeploymentMode.INCREMENTAL);
 
@@ -168,7 +168,7 @@ public class AzureService {
             JsonObject responseJson = jsonReader.readObject();
 
             JsonObject authentication = responseJson.getJsonObject("authentication");
-            String audience = authentication.getJsonObject("audiences").toString().split("\"")[1];
+            String audience = authentication.getJsonArray("audiences").toString().split("\"")[1];
 
             adSettings.put("galleryEndpoint", responseJson.getString("galleryEndpoint"));
             adSettings.put("login_endpoint", authentication.getString("loginEndpoint"));
