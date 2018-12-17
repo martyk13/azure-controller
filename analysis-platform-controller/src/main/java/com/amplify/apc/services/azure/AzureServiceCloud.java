@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.credentials.AzureTokenCredentials;
@@ -41,19 +42,19 @@ public class AzureServiceCloud extends AbstractAzureService {
 	@Autowired
 	private ResponseService responseService;
 
-	@Async
 	@Override
 	public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId,
 			String responseUrl) {
 		try {
-			String templateJson = getTemplate(template);
+			JsonNode templateJson = getTemplate(template);
 
 			Azure azure = azureLogin();
 			ResourceGroup resourceGroup = getResourceGroup(azure, resourceGroupName);
 
 			LOGGER.info("Starting a deployment for an Azure App Service: " + instanceId);
-			azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup).withTemplate(templateJson)
-					.withParameters(getProperties(instanceId)).withMode(DeploymentMode.INCREMENTAL).create();
+			azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup)
+					.withTemplate(templateJson.toString()).withParameters(getProperties(instanceId))
+					.withMode(DeploymentMode.INCREMENTAL).create();
 			LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
 			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
 		} catch (Exception e) {
@@ -62,7 +63,6 @@ public class AzureServiceCloud extends AbstractAzureService {
 		}
 	}
 
-	@Async
 	@Override
 	public void deleteResourceGroup(String resourceGroupName, List<String> instanceIds, String responseUrl) {
 		try {

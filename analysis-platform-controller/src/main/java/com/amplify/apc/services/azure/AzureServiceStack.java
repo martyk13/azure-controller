@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.credentials.AzureTokenCredentials;
@@ -45,11 +46,10 @@ public class AzureServiceStack extends AbstractAzureService {
     @Value("${azure.login.location}")
     private String location;
 
-    @Async
     @Override
     public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId, String responseUrl) {
         try {
-            String templateJson = getTemplate(template);
+            JsonNode templateJson = getTemplate(template);
 
             Azure azure = azureLogin();
             createResourceGroup(azure, resourceGroupName);
@@ -74,7 +74,6 @@ public class AzureServiceStack extends AbstractAzureService {
         }
     }
 
-    @Async
     @Override
     public void deleteResourceGroup(String resourceGroupName, List<String> instanceIds, String responseUrl) {
         try {
@@ -147,7 +146,7 @@ public class AzureServiceStack extends AbstractAzureService {
             JsonObject responseJson = jsonReader.readObject();
 
             JsonObject authentication = responseJson.getJsonObject("authentication");
-            String audience = authentication.getJsonObject("audiences").toString().split("\"")[1];
+            String audience = authentication.getJsonArray("audiences").toString().split("\"")[1];
 
             adSettings.put("galleryEndpoint", responseJson.getString("galleryEndpoint"));
             adSettings.put("login_endpoint", authentication.getString("loginEndpoint"));

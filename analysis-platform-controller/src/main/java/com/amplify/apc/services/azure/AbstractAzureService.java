@@ -49,7 +49,7 @@ public abstract class AbstractAzureService implements AzureService {
 		return json;
 	}
 
-	protected String getTemplate(File templateFile)
+	protected JsonNode getTemplate(File templateFile)
 			throws IllegalAccessException, JsonProcessingException, IOException {
 
 		LOGGER.info("Converting template to JSON and inserting parameters");
@@ -61,6 +61,6 @@ public abstract class AbstractAzureService implements AzureService {
 		final ObjectMapper mapper = new ObjectMapper();
 		final JsonNode templateJson = mapper.readTree(template);
 
-		return templateJson.toString();
+		return templateJson;
 	}
 }
