@@ -25,6 +25,12 @@
             <artifactId>javax.json</artifactId>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.microsoft.azure.profile_2018_03_01_hybrid/azure -->
+        <dependency>
+            <groupId>com.microsoft.azure.profile_2018_03_01_hybrid</groupId>
+            <artifactId>azure</artifactId>
+            <version>1.0.0-beta-1</version>
+        </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure</artifactId>
