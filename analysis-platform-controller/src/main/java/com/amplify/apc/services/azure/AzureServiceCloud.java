@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 
+import com.amplify.apc.domain.ResourceType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
@@ -43,8 +44,8 @@ public class AzureServiceCloud extends AbstractAzureService {
 	private ResponseService responseService;
 
 	@Override
-	public void createResourceFromArmTemplate(File template, String resourceGroupName, String instanceId,
-			String responseUrl) {
+	public void createResourceFromArmTemplate(File template, ResourceType resourceType, String resourceGroupName,
+			String instanceId, String responseUrl) {
 		try {
 			JsonNode templateJson = getTemplate(template);
 
@@ -53,7 +54,7 @@ public class AzureServiceCloud extends AbstractAzureService {
 
 			LOGGER.info("Starting a deployment for an Azure App Service: " + instanceId);
 			azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup)
-					.withTemplate(templateJson.toString()).withParameters(getProperties(instanceId))
+					.withTemplate(templateJson.toString()).withParameters(getProperties(resourceType, instanceId))
 					.withMode(DeploymentMode.INCREMENTAL).create();
 			LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
 			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");

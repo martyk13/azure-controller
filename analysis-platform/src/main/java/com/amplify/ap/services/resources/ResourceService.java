@@ -1,6 +1,10 @@
 package com.amplify.ap.services.resources;
 
-import com.amplify.ap.domain.Resource;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +21,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Set;
+import com.amplify.ap.domain.Resource;
 
 @Service
 public class ResourceService {
@@ -33,7 +34,7 @@ public class ResourceService {
     @Value("${resources.clients.requesturl}")
     private String resourceRequestUrl;
 
-    public HttpStatus requestResource(String resourceGroup, String instanceId, File template) throws IOException {
+    public HttpStatus requestResource(String resourceGroup, String instanceId, File template, String resourceType) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("Requesting new resource from ");
         sb.append(resourceRequestUrl);
@@ -43,6 +44,8 @@ public class ResourceService {
         sb.append(instanceId);
         sb.append(", templateFile: ");
         sb.append(template.getAbsolutePath());
+        sb.append(", resourceType: ");
+        sb.append(resourceType);
         sb.append("}");
         LOGGER.info(sb.toString());
 
@@ -62,6 +65,7 @@ public class ResourceService {
         body.add("instance-id", instanceId);
         body.add("response-url", getResponseUrl());
         body.add("template", templateEntity);
+        body.add("resource-type", resourceType);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity
                 = new HttpEntity<>(body, headers);
