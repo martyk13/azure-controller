@@ -16,6 +16,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponents;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,10 +52,12 @@ public class ResourceService {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         // Cretae file and content disposition
-        LinkedMultiValueMap<String, String> pdfHeaderMap = new LinkedMultiValueMap<>();
-        pdfHeaderMap.add("Content-disposition", "form-data; name=template; filename=" + template.getName());
-        pdfHeaderMap.add("Content-type", "application/octet-stream");
-        HttpEntity<byte[]> templateEntity = new HttpEntity<byte[]>(Files.readAllBytes(template.toPath()), pdfHeaderMap);
+        LinkedMultiValueMap<String, String> headerMap = new LinkedMultiValueMap<>();
+        headerMap.add("Content-disposition", "form-data; name=template; filename=" + template.getName());
+        headerMap.add("Content-type", "application/octet-stream");
+        headerMap.add("Origin", getResponseUrl());
+
+        HttpEntity<byte[]> templateEntity = new HttpEntity<byte[]>(Files.readAllBytes(template.toPath()), headerMap);
 
         MultiValueMap<String, Object> body
                 = new LinkedMultiValueMap<>();
@@ -82,6 +85,7 @@ public class ResourceService {
 
     private String getResponseUrl() {
         // Get the request URL to respond to once processing has finished
-        return ServletUriComponentsBuilder.fromCurrentRequestUri().build().getHost();
+        UriComponents uriComponents = ServletUriComponentsBuilder.fromCurrentRequestUri().build();
+        return uriComponents.getScheme() + "://" + uriComponents.getHost() + ":" + uriComponents.getPort();
     }
 }
