@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -39,10 +40,33 @@ public abstract class AbstractAzureService implements AzureService {
 
 	@Value("${azure.props.adminpassword}")
 	protected String adminPassword;
+	
+	@Value("${azure.resource.region.default}")
+	protected String defaultRegion;
 
 	@Autowired
 	protected ResponseService responseService;
 
+	/**
+	 * Creates and returns a randomized name based on the prefix and a UUID (minus the hyphens)
+	 *
+	 * @param namePrefix The prefix string to be used in generating the name.
+	 * @param maxLength The maximum length of the name (no limit if <= 0)
+	 * @return The randomized name
+	 */
+	public static String createRandomName(String namePrefix, int maxLength) {
+
+		String name = namePrefix + UUID.randomUUID().toString().replace("-", "");
+		return (maxLength > 0 ? name.substring(0, maxLength) : name);
+	}
+
+	public static String createRandomName(String namePrefix) {
+
+		// No length limitation
+		return (createRandomName(namePrefix, -1));
+	}
+
+	
 	protected String getProperties(ResourceType type, String instanceId) {
 
 		JsonObject props = null;
@@ -89,4 +113,5 @@ public abstract class AbstractAzureService implements AzureService {
 
 		return templateJson;
 	}
+
 }

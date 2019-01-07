@@ -32,10 +32,13 @@ createResource() {
     # Load the auth file
     source $AZURE_AUTH_LOCATION
 
+    DEBUG="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8087"
+
     java -Dspring.data.mongodb.uri='mongodb://localhost:27017/paf' -jar \
         -Dresources.clients.requesturl="http://localhost:8081/deployARMTemplate" \
         ${AP_HOME}/analysis-platform/target/analysis-platform-${AP_VERSION}.jar >> ${AP_LOG} &
-    java -Dserver.port=8081 -jar \
+
+    java ${DEBUG} -Dserver.port=8081 -jar \
         -Dazure.login.clientid=$client \
         -Dazure.login.domain=$tenant \
         -Dazure.login.secret=$key \

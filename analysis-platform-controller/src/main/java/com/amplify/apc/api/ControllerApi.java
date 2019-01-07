@@ -15,17 +15,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.amplify.apc.domain.ResourceType;
 import com.amplify.apc.domain.ResourceTypeConverter;
+import com.amplify.apc.services.azure.AbstractAzureService;
 import com.amplify.apc.services.azure.AzureService;
 
 @RestController
@@ -41,7 +42,7 @@ public class ControllerApi {
 		webdataBinder.registerCustomEditor(ResourceType.class, new ResourceTypeConverter());
 	}
 
-	@RequestMapping(value = "/deployARMTemplate", method = RequestMethod.POST, consumes = { "multipart/form-data" })
+	@PostMapping(value = "/deployARMTemplate", consumes = { "multipart/form-data" })
 	public ResponseEntity<String> deployARMTemplate(@RequestParam("resource-group") @NotBlank String resourceGroupName,
 			@RequestParam("instance-id") @NotBlank String instanceId,
 			@RequestParam("response-url") @NotBlank String responseUrl,
@@ -81,10 +82,141 @@ public class ControllerApi {
 		}
 	}
 
-	@RequestMapping(value = "/deployARMTemplate/{resource-group}", method = RequestMethod.DELETE)
+	@DeleteMapping(value = "/deleteResourceGroup/{resource-group}")
 	public void deleteResourceGroup(@PathVariable(name = "resource-group") String resourceGroupName,
 			@RequestParam(name = "response-url") String responseUrl, @RequestBody List<String> instanceIds) {
+
 		LOGGER.info("Request received to delete resource group {}", resourceGroupName);
 		azureService.deleteResourceGroup(resourceGroupName, instanceIds, responseUrl);
+	}
+
+	@PostMapping(value = "/createStorageAccount")
+	public ResponseEntity<String> createStorageAccount(
+			@RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("instance-id") @NotBlank String instanceId,
+			@RequestParam("response-url") @NotBlank String responseUrl
+	// TODO : Support multiple tags passed in Map<String,String>
+	) {
+
+		LOGGER.info("Request received to Create Storage Account in Resource Group [" + resourceGroupName + "]");
+
+		// Generate Random name for the Storage Account
+		String storageAccountName = AbstractAzureService.createRandomName("stacc", 23);
+
+		try {
+			azureService.createStorageAccount(resourceGroupName, storageAccountName, instanceId, responseUrl);
+
+			return new ResponseEntity<>("You have successfully submitted a request to create Storage Account ["
+					+ storageAccountName + "] in Resource Group [" + resourceGroupName + "]", HttpStatus.OK);
+
+		} catch (Exception e) {
+			return new ResponseEntity<>("Unable to create Storage Account [" + storageAccountName
+					+ "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@DeleteMapping(value = "/deleteStorageAccount/{account-name}")
+	public ResponseEntity<String> deleteStorageAccount(
+			@RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("account-name") @NotBlank String storageAccountName,
+			@RequestParam("instance-id") @NotBlank String instanceId,
+			@RequestParam("response-url") @NotBlank String responseUrl) {
+
+		LOGGER.info("Request received to Delete Storage Account: [" + storageAccountName + "] in Resource Group ["
+				+ resourceGroupName + "]");
+
+		try {
+			// TODO : Add protection ?  Don't delete active Accounts ?
+			azureService.deleteStorageAccount(resourceGroupName, storageAccountName, instanceId, responseUrl);
+
+			return new ResponseEntity<>("You have successfully submitted a request to delete Storage Account ["
+					+ storageAccountName + "] in Resource Group [" + resourceGroupName + "]", HttpStatus.OK);
+
+		} catch (Exception e) {
+			return new ResponseEntity<>("Unable to delete Storage Account [" + storageAccountName
+					+ "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@DeleteMapping(value = "/deleteStorageAccountById/{account-id}")
+	public ResponseEntity<String> deleteStorageAccountById(
+			@RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("account-id") @NotBlank String storageAccountId,
+			@RequestParam("instance-id") @NotBlank String instanceId,
+			@RequestParam("response-url") @NotBlank String responseUrl) {
+
+		LOGGER.info("Request received to Delete Storage Account: [" + storageAccountId + "] in Resource Group ["
+				+ resourceGroupName + "]");
+
+		try {
+			// TODO : Add protection ?  Don't delete active Accounts ?
+			azureService.deleteStorageAccountById(resourceGroupName, storageAccountId, instanceId, responseUrl);
+
+			return new ResponseEntity<>("You have successfully submitted a request to delete Storage Account ["
+					+ storageAccountId + "] in Resource Group [" + resourceGroupName + "]", HttpStatus.OK);
+
+		} catch (Exception e) {
+			return new ResponseEntity<>("Unable to delete Storage Account [" + storageAccountId
+					+ "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@PostMapping(value = "/createStorageContainer")
+	public ResponseEntity<String> createStorageContainer(
+			@RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("instance-id") @NotBlank String instanceId,
+			@RequestParam("response-url") @NotBlank String responseUrl,
+			@RequestParam("account-name") @NotBlank String accountName
+	// TODO : Support multiple tags passed in Map<String,String>
+	) {
+
+		LOGGER.info("Request received to Create Storage Container in Storage Account [" + accountName
+				+ "] in Resource Group [" + resourceGroupName + "]");
+
+		// Generate Random name for the Storage Container
+		String containerName = AbstractAzureService.createRandomName("stcont");
+
+		try {
+			azureService.createStorageContainer(resourceGroupName, accountName, containerName, instanceId, responseUrl);
+
+			return new ResponseEntity<>("You have successfully submitted a request to create Storage Container ["
+					+ containerName + "] in Storage Account [" + accountName + "] in Resource Group ["
+					+ resourceGroupName + "]", HttpStatus.OK);
+
+		} catch (Exception e) {
+			return new ResponseEntity<>(
+					"Unable to create Storage Container [" + containerName + "] in Storage Account [" + accountName
+							+ "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@DeleteMapping(value = "/deleteStorageContainer")
+	public ResponseEntity<String> deleteStorageContainer(
+			@RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("instance-id") @NotBlank String instanceId,
+			@RequestParam("response-url") @NotBlank String responseUrl,
+			@RequestParam("account-name") @NotBlank String accountName,
+			@RequestParam("container-name") @NotBlank String containerName) {
+
+		LOGGER.info("Request received to Delete Storage Container: [" + containerName + "] in Storage Account ["
+				+ accountName + "] in Resource Group [" + resourceGroupName + "]");
+
+		try {
+			azureService.deleteStorageContainer(resourceGroupName, accountName, containerName, instanceId, responseUrl);
+
+			return new ResponseEntity<>("You have successfully submitted a request to delete Storage Container ["
+					+ containerName + "] in Storage Account [" + accountName + "] in Resource Group ["
+					+ resourceGroupName + "]", HttpStatus.OK);
+
+		} catch (Exception e) {
+			return new ResponseEntity<>(
+					"Unable to delete Storage Container [" + containerName + "] in Storage Account [" + accountName
+							+ "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 	}
 }

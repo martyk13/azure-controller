@@ -170,4 +170,39 @@ public class AzureServiceStack extends AbstractAzureService {
 			LOGGER.error(e.getMessage());
 		}
 	}
+
+	@Override
+	public void createStorageAccount(String resourceGroupName, String accountName, String instanceId,
+			String responseUrl) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deleteStorageAccount(String resourceGroupName, String accountName, String instanceId,
+			String responseUrl) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deleteStorageAccountById(String resourceGroupName, String storageAccountId, String instanceId,
+			String responseUrl) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void createStorageContainer(String resourceGroupName, String accountName, String containerName,
+			String instanceId, String responseUrl) {
+
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void deleteStorageContainer(String resourceGroupName, String accountName, String containerName,
+			String instanceId, String responseUrl) {
+
+		// TODO Auto-generated method stub
+
+	}
 }

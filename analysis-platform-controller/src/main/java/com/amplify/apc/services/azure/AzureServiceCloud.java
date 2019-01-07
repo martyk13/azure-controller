@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 
 import com.amplify.apc.domain.ResourceType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,44 +18,66 @@ import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.resources.DeploymentMode;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
+import com.microsoft.azure.management.storage.StorageAccount;
+import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
+import com.microsoft.azure.storage.blob.BlobRequestOptions;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.rest.LogLevel;
 
 public class AzureServiceCloud extends AbstractAzureService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AzureServiceCloud.class);
 
-	@Value("${azure.login.clientid}")
-	private String azureClientId;
-
-	@Value("${azure.login.domain}")
-	private String azureDomain;
-
-	@Value("${azure.login.secret}")
-	private String azureSecret;
-
-	@Value("${azure.props.adminuser}")
-	private String adminUsername;
-
-	@Value("${azure.props.adminpassword}")
-	private String adminPassword;
-
 	@Autowired
 	private ResponseService responseService;
+
+	private Azure azureService;
+
+	// CLOUD implementation of Azure Login
+	private synchronized Azure azureLogin() throws IOException {
+
+		if (azureService == null) {
+			LOGGER.info("Authenticating to AZURE");
+			AzureEnvironment environment = AzureEnvironment.AZURE;
+			AzureTokenCredentials credentials = new ApplicationTokenCredentials(azureClientId, azureDomain, azureSecret,
+					environment);
+			azureService = Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials)
+					.withDefaultSubscription();
+		}
+		return azureService;
+	}
+
+	private ResourceGroup getResourceGroup(String resourceGroupName) throws IOException {
+
+		azureLogin();
+		ResourceGroup resourceGroup;
+
+		if (azureService.resourceGroups().contain(resourceGroupName)) {
+			LOGGER.info("Getting an existing resource group with name: " + resourceGroupName);
+			resourceGroup = azureService.resourceGroups().getByName(resourceGroupName);
+		} else {
+			LOGGER.info("Creating a new resource group with name: " + resourceGroupName);
+			// TODO : Resource Group should be created in appropriate Region
+			resourceGroup = azureService.resourceGroups().define(resourceGroupName).withRegion(defaultRegion).create();
+		}
+		return resourceGroup;
+	}
 
 	@Override
 	public void createResourceFromArmTemplate(File template, ResourceType resourceType, String resourceGroupName,
 			String instanceId, String responseUrl) {
 		try {
 			JsonNode templateJson = getTemplate(template);
-
-			Azure azure = azureLogin();
-			ResourceGroup resourceGroup = getResourceGroup(azure, resourceGroupName);
+			azureLogin();
 
 			LOGGER.info("Starting a deployment for an Azure App Service: " + instanceId);
-			azure.deployments().define(instanceId).withExistingResourceGroup(resourceGroup)
+			azureService.deployments().define(instanceId).withExistingResourceGroup(getResourceGroup(resourceGroupName))
 					.withTemplate(templateJson.toString()).withParameters(getProperties(resourceType, instanceId))
 					.withMode(DeploymentMode.INCREMENTAL).create();
 			LOGGER.info("Finished a deployment for an Azure App Service: " + instanceId);
+
 			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
@@ -67,9 +88,9 @@ public class AzureServiceCloud extends AbstractAzureService {
 	@Override
 	public void deleteResourceGroup(String resourceGroupName, List<String> instanceIds, String responseUrl) {
 		try {
-			Azure azure = azureLogin();
+			azureLogin();
 			LOGGER.info("Deleting resource group: {}", resourceGroupName);
-			azure.resourceGroups().deleteByName(resourceGroupName);
+			azureService.resourceGroups().deleteByName(resourceGroupName);
 			for (String instanceId : instanceIds) {
 				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
 			}
@@ -81,24 +102,161 @@ public class AzureServiceCloud extends AbstractAzureService {
 		}
 	}
 
-	private Azure azureLogin() throws IOException {
-		LOGGER.info("Authenticating to AZURE");
-		AzureEnvironment environment = AzureEnvironment.AZURE;
-		AzureTokenCredentials credentials = new ApplicationTokenCredentials(azureClientId, azureDomain, azureSecret,
-				environment);
+	@Override
+	public void createStorageAccount(String resourceGroupName, String storageAccountName, String instanceId,
+			String responseUrl) {
 
-		return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
+		try {
+			// TODO : How should the response service work for this type of request ?
+
+			// If the Resource Group already exists then use it's Region for the Storage
+			// Account, otherwise default it.
+			ResourceGroup group = getResourceGroup(resourceGroupName);
+
+			StorageAccount storageAccount = azureService.storageAccounts().define(storageAccountName)
+					.withRegion(group.region()).withExistingResourceGroup(group).create();
+
+			if (storageAccount != null) {
+				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
+			} else {
+				LOGGER.info("Request for creation of Storage Account: [" + storageAccountName + "] in Resource Group ["
+						+ resourceGroupName + "] FAILED - already exists");
+				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+			}
+
+		} catch (
+
+		Exception e) {
+			LOGGER.error(e.getMessage());
+			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+		}
 	}
 
-	private ResourceGroup getResourceGroup(Azure azure, String resourceGroupName) throws IOException {
-		ResourceGroup resourceGroup;
-		if (azure.resourceGroups().contain(resourceGroupName)) {
-			LOGGER.info("Getting an exisiting resource group with name: " + resourceGroupName);
-			resourceGroup = azure.resourceGroups().getByName(resourceGroupName);
-		} else {
-			LOGGER.info("Creating a new resource group with name: " + resourceGroupName);
-			resourceGroup = azure.resourceGroups().define(resourceGroupName).withRegion(Region.US_EAST).create();
+	@Override
+	public void deleteStorageAccount(String resourceGroupName, String storageAccountName, String instanceId,
+			String responseUrl) {
+		try {
+			// TODO : How should the response service work for this type of request ?
+
+			StorageAccount storageAccount = azureService.storageAccounts().getByResourceGroup(resourceGroupName,
+					storageAccountName);
+
+			deleteStorageAccountById(resourceGroupName, storageAccount.id(), instanceId, responseUrl);
+
+		} catch (
+
+		Exception e) {
+			LOGGER.error(e.getMessage());
+			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 		}
-		return resourceGroup;
+	}
+
+	@Override
+	public void deleteStorageAccountById(String resourceGroupName, String storageAccountId, String instanceId,
+			String responseUrl) {
+		try {
+			// TODO : How should the response service work for this type of request ?
+
+			StorageAccount storageAccount = azureService.storageAccounts().getById(storageAccountId);
+
+			// TODO : Protection against mistaken deletion ? Use of Access Policies, Soft
+			// Delete, ... ?
+			if (storageAccountId != null) {
+				azureService.storageAccounts().deleteById(storageAccount.id());
+				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
+			} else {
+				LOGGER.info("Request for deletion of Storage Account with ID : [" + storageAccountId
+						+ "] in Resource Group [" + resourceGroupName + "] FAILED as it does not exist");
+				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+			}
+
+		} catch (
+
+		Exception e) {
+			LOGGER.error(e.getMessage());
+			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+		}
+	}
+
+	@Override
+	public void createStorageContainer(String resourceGroupName, String accountName, String containerName,
+			String instanceId, String responseUrl) {
+		try {
+			// TODO : How should the response service work for this type of request ?
+
+			// Get hold of a reference to the Container (NOTE this doesn't create the
+			// container - it may or may not exist)
+			CloudBlobContainer container = getContainerReference(resourceGroupName, accountName, containerName);
+
+			if (container != null) {
+				// Create the container if it does not exist with NO public access.
+				if (container.createIfNotExists(BlobContainerPublicAccessType.OFF, new BlobRequestOptions(),
+						new OperationContext())) {
+					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
+				} else {
+					LOGGER.info("Request for creation of Storage Container: [" + containerName
+							+ "] in Storage Account [" + accountName + "] in Resource Group [" + resourceGroupName
+							+ "] FAILED - already exists");
+					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+				}
+			}
+
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+		}
+	}
+
+	@Override
+	public void deleteStorageContainer(String resourceGroupName, String accountName, String containerName,
+			String instanceId, String responseUrl) {
+		try {
+			// TODO : How should the response service work for this type of request ?
+			// Get hold of a reference to the Container (NOTE this doesn't create the
+			// container - it may or may not exist)
+			CloudBlobContainer container = getContainerReference(resourceGroupName, accountName, containerName);
+
+			if (container != null) {
+				// TODO : Protection against mistaken deletion ? Use of Access Policies, Soft
+				// Delete, ... ?
+				// Delete the container if it exists
+				if (container.deleteIfExists()) {
+					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
+				} else {
+					LOGGER.info("Request for deletion of Storage Container: [" + containerName
+							+ "] in Storage Account [" + accountName + "] in Resource Group [" + resourceGroupName
+							+ "] FAILED as it doesn not exist");
+					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+				}
+			}
+
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+		}
+	}
+
+	/**
+	 * Helper for getting hold of a Reference to a Container.
+	 * 
+	 * @param resourceGroupName The Resource Group Name
+	 * @param accountName       The Storage Account Name
+	 * @param containerName     The Storage Container name
+	 * @return The {@link CloudBlobContainer} to use for the Container.
+	 */
+	private CloudBlobContainer getContainerReference(String resourceGroupName, String accountName,
+			String containerName) {
+
+		try {
+			azureLogin();
+			StorageAccount storageAccount = azureService.storageAccounts().getByResourceGroup(resourceGroupName,
+					accountName);
+			CloudBlobClient blobClient = BlobClientProvider.getBlobClientReference(storageAccount);
+			return blobClient.getContainerReference(containerName);
+
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+			return null;
+		}
 	}
 }
