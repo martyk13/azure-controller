@@ -1,10 +1,6 @@
 package com.amplify.ap.services.resources;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Set;
-
+import com.amplify.ap.domain.ResourceGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +17,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.amplify.ap.domain.Resource;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Set;
 
 @Service
 public class ResourceService {
@@ -74,12 +73,12 @@ public class ResourceService {
         return response.getStatusCode();
     }
 
-    public HttpStatus deleteResource(Resource resource) {
-        LOGGER.info("Sending request to delete Resource Group: {}", resource.getResourceGroup());
+    public HttpStatus deleteResource(ResourceGroup resourceGroup) {
+        LOGGER.info("Sending request to delete ResourceGroup Group: {}", resourceGroup.getResourceGroupName());
 
-        String requestUrl = resourceRequestUrl + "/" + resource.getResourceGroup() + "?response-url=" + getResponseUrl();
+        String requestUrl = resourceRequestUrl + "/" + resourceGroup.getResourceGroupName() + "?response-url=" + getResponseUrl();
 
-        HttpEntity<Set<String>> request = new HttpEntity<Set<String>>(resource.getTemplateInstances().keySet());
+        HttpEntity<Set<String>> request = new HttpEntity<Set<String>>(resourceGroup.getResourceInstances().keySet());
         ResponseEntity response = restTemplate.exchange(requestUrl, HttpMethod.DELETE, request, ResponseEntity.class);
         return response.getStatusCode();
     }
