@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,6 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.amplify.ap.dao.ResourceDao;
 import com.amplify.ap.dao.TemplateDao;
 import com.amplify.ap.domain.Resource;
+import com.amplify.ap.domain.ResourceType;
+import com.amplify.ap.domain.ResourceTypeConverter;
+import com.amplify.ap.domain.Template;
 import com.amplify.ap.domain.TemplateInstance;
 import com.amplify.ap.domain.TemplateInstanceStatus;
 import com.amplify.ap.services.resources.ResourceService;
@@ -42,6 +48,11 @@ public class ResourcesApi {
 	@Autowired
 	private TemplateService templateService;
 
+	@InitBinder
+	public void initBinder(final WebDataBinder webdataBinder) {
+		webdataBinder.registerCustomEditor(ResourceType.class, new ResourceTypeConverter());
+	}
+
 	@RequestMapping(method = RequestMethod.GET)
 	public List<Resource> getAllResources() {
 		return resourceDao.findAll();
@@ -50,28 +61,34 @@ public class ResourcesApi {
 	@RequestMapping(method = RequestMethod.POST)
 	public void createResources(@RequestParam(name = "resource-group") String resourceGroup,
 			@RequestParam(name = "template-id") String templateId,
-			@RequestParam(name = "resource-type") String resourceType,
 			@RequestParam(name = "notification-email") String notificationEmail) throws IOException {
-		
-		if (templateDao.existsById(templateId)) {
-			TemplateInstance newTemplateInstance = new TemplateInstance(templateId, UUID.randomUUID().toString(),
-					notificationEmail, TemplateInstanceStatus.CREATING);
-			HttpStatus status = resourceService.requestResource(resourceGroup, newTemplateInstance.getInstanceId(),
-					templateService.getTemplateFile(templateId), resourceType);
 
-			if (HttpStatus.OK.equals(status)) {
-				if (!resourceDao.existsById(resourceGroup)) {
-					Map<String, TemplateInstance> templateInstances = new HashMap<>();
-					templateInstances.put(newTemplateInstance.getInstanceId(), newTemplateInstance);
-					Resource resource = new Resource(resourceGroup, templateInstances);
-					resourceDao.save(resource);
+		Optional<Template> check = templateDao.findById(templateId);
+
+		if (check.isPresent()) {
+			Template template = check.get();
+			if (check.get().getResourceType() != null) {
+				TemplateInstance newTemplateInstance = new TemplateInstance(templateId, UUID.randomUUID().toString(),
+						notificationEmail, TemplateInstanceStatus.CREATING);
+				HttpStatus status = resourceService.requestResource(resourceGroup, newTemplateInstance.getInstanceId(),
+						templateService.getTemplateFile(templateId), template.getResourceType());
+
+				if (HttpStatus.OK.equals(status)) {
+					if (!resourceDao.existsById(resourceGroup)) {
+						Map<String, TemplateInstance> templateInstances = new HashMap<>();
+						templateInstances.put(newTemplateInstance.getInstanceId(), newTemplateInstance);
+						Resource resource = new Resource(resourceGroup, templateInstances);
+						resourceDao.save(resource);
+					} else {
+						Resource resource = resourceDao.findById(resourceGroup).get();
+						resource.addTemplateInstance(newTemplateInstance);
+						resourceDao.save(resource);
+					}
 				} else {
-					Resource resource = resourceDao.findById(resourceGroup).get();
-					resource.addTemplateInstance(newTemplateInstance);
-					resourceDao.save(resource);
+					throw new RuntimeException("Request to create resource failed with error code " + status);
 				}
 			} else {
-				throw new RuntimeException("Request to create resource failed with error code " + status);
+				throw new IllegalArgumentException("Template ID: " + templateId + " must have it's Resource Type set");
 			}
 		} else {
 			throw new IllegalArgumentException("Template ID: " + templateId + " does not exist");

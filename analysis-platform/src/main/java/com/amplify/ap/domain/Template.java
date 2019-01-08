@@ -17,6 +17,8 @@ public class Template {
 
     private String description;
 
+    private String resourceType;
+
     @NotNull
     private String author;
 
@@ -76,6 +78,18 @@ public class Template {
         this.description = description;
     }
 
+	public String getResourceType() {
+		return this.resourceType;
+	}
+	
+	public void setResourceType(ResourceType resourceType) {
+		this.resourceType = resourceType != null ? resourceType.getValue() : this.resourceType;
+	}
+	
+	public void setResourceType(String resourceType) {
+		this.resourceType = resourceType;
+	}
+	
     public String getAuthor() {
         return author;
     }
@@ -129,6 +143,7 @@ public class Template {
         final StringBuilder sb = new StringBuilder("Template{");
         sb.append("id='").append(id).append('\'');
         sb.append(", filePath='").append(filePath).append('\'');
+        sb.append(", resourceType='").append(resourceType).append('\'');
         sb.append(", description='").append(description).append('\'');
         sb.append(", author='").append(author).append('\'');
         sb.append(", authorEmail='").append(authorEmail).append('\'');
@@ -139,4 +154,5 @@ public class Template {
         sb.append('}');
         return sb.toString();
     }
+
 }

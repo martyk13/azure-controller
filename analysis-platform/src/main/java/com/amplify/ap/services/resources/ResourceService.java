@@ -22,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.amplify.ap.domain.Resource;
+import com.amplify.ap.domain.ResourceType;
 
 @Service
 public class ResourceService {
