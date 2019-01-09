@@ -1,6 +1,10 @@
 package com.amplify.ap.services.resources;
 
-import com.amplify.ap.domain.ResourceGroup;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +21,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Set;
+import com.amplify.ap.domain.ResourceGroup;
+import com.amplify.ap.domain.ResourceType;
 
 @Service
 public class ResourceService {
