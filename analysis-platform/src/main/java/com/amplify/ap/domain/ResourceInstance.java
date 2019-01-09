@@ -1,6 +1,7 @@
 package com.amplify.ap.domain;
 
 import javax.validation.constraints.NotNull;
+import java.util.UUID;
 
 public class ResourceInstance {
 
@@ -18,11 +19,19 @@ public class ResourceInstance {
     @NotNull
     private TemplateInstanceStatus status;
 
-    public ResourceInstance(String templateId, String resourceId, String notificationEmail, TemplateInstanceStatus status) {
+    @NotNull
+    private ResourceType resourceType;
+
+    public ResourceInstance(String templateId, String resourceId, String notificationEmail, TemplateInstanceStatus status, ResourceType resourceType) {
         this.templateId = templateId;
         this.resourceId = resourceId;
         this.notificationEmail = notificationEmail;
         this.status = status;
+        this.resourceType = resourceType;
+    }
+
+    public static String generateID() {
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 15).toLowerCase();
     }
 
     public String getTemplateId() {
@@ -53,6 +62,10 @@ public class ResourceInstance {
         this.status = status;
     }
 
+    public ResourceType getResourceType() {
+        return resourceType;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("ResourceInstance{");
@@ -61,6 +74,7 @@ public class ResourceInstance {
         sb.append(", connectionUrl='").append(connectionUrl).append('\'');
         sb.append(", notificationEmail='").append(notificationEmail).append('\'');
         sb.append(", status=").append(status);
+        sb.append(", resourceType=").append(resourceType);
         sb.append('}');
         return sb.toString();
     }
