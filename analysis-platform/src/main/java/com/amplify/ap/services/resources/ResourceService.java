@@ -21,7 +21,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import com.amplify.ap.domain.Resource;
+import com.amplify.ap.domain.ResourceGroup;
 import com.amplify.ap.domain.ResourceType;
 
 @Service
@@ -75,12 +75,12 @@ public class ResourceService {
         return response.getStatusCode();
     }
 
-    public HttpStatus deleteResource(Resource resource) {
-        LOGGER.info("Sending request to delete Resource Group: {}", resource.getResourceGroup());
+    public HttpStatus deleteResource(ResourceGroup resourceGroup) {
+        LOGGER.info("Sending request to delete ResourceGroup Group: {}", resourceGroup.getResourceGroupName());
 
-        String requestUrl = resourceRequestUrl + "/" + resource.getResourceGroup() + "?response-url=" + getResponseUrl();
+        String requestUrl = resourceRequestUrl + "/" + resourceGroup.getResourceGroupName() + "?response-url=" + getResponseUrl();
 
-        HttpEntity<Set<String>> request = new HttpEntity<Set<String>>(resource.getTemplateInstances().keySet());
+        HttpEntity<Set<String>> request = new HttpEntity<Set<String>>(resourceGroup.getResourceInstances().keySet());
         ResponseEntity response = restTemplate.exchange(requestUrl, HttpMethod.DELETE, request, ResponseEntity.class);
         return response.getStatusCode();
     }

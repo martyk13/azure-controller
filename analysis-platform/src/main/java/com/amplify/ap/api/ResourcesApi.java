@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.amplify.ap.dao.ResourceDao;
 import com.amplify.ap.dao.TemplateDao;
-import com.amplify.ap.domain.Resource;
+import com.amplify.ap.domain.ResourceGroup;
+import com.amplify.ap.domain.ResourceInstance;
 import com.amplify.ap.domain.ResourceType;
 import com.amplify.ap.domain.ResourceTypeConverter;
 import com.amplify.ap.domain.Template;
-import com.amplify.ap.domain.TemplateInstance;
 import com.amplify.ap.domain.TemplateInstanceStatus;
 import com.amplify.ap.services.resources.ResourceService;
 import com.amplify.ap.services.templates.TemplateService;
@@ -48,84 +48,89 @@ public class ResourcesApi {
 	@Autowired
 	private TemplateService templateService;
 
+	@RequestMapping(method = RequestMethod.GET)
+	public List<ResourceGroup> getAllResources() {
+		return resourceDao.findAll();
+	}
+
 	@InitBinder
 	public void initBinder(final WebDataBinder webdataBinder) {
 		webdataBinder.registerCustomEditor(ResourceType.class, new ResourceTypeConverter());
 	}
 
-	@RequestMapping(method = RequestMethod.GET)
-	public List<Resource> getAllResources() {
-		return resourceDao.findAll();
-	}
-
 	@RequestMapping(method = RequestMethod.POST)
-	public void createResources(@RequestParam(name = "resource-group") String resourceGroup,
+	public void createResources(@RequestParam(name = "resource-group") String resourceGroupName,
 			@RequestParam(name = "template-id") String templateId,
 			@RequestParam(name = "notification-email") String notificationEmail) throws IOException {
 
 		Optional<Template> check = templateDao.findById(templateId);
 
 		if (check.isPresent()) {
+
 			Template template = check.get();
-			if (check.get().getResourceType() != null) {
-				TemplateInstance newTemplateInstance = new TemplateInstance(templateId, UUID.randomUUID().toString(),
+
+			if (template.getResourceType() != null) {
+
+				ResourceInstance newResourceInstance = new ResourceInstance(templateId, UUID.randomUUID().toString(),
 						notificationEmail, TemplateInstanceStatus.CREATING);
-				HttpStatus status = resourceService.requestResource(resourceGroup, newTemplateInstance.getInstanceId(),
-						templateService.getTemplateFile(templateId), template.getResourceType());
+				HttpStatus status = resourceService.requestResource(resourceGroupName,
+						newResourceInstance.getResourceId(), templateService.getTemplateFile(templateId),
+						template.getResourceType());
 
 				if (HttpStatus.OK.equals(status)) {
-					if (!resourceDao.existsById(resourceGroup)) {
-						Map<String, TemplateInstance> templateInstances = new HashMap<>();
-						templateInstances.put(newTemplateInstance.getInstanceId(), newTemplateInstance);
-						Resource resource = new Resource(resourceGroup, templateInstances);
-						resourceDao.save(resource);
+					if (!resourceDao.existsById(resourceGroupName)) {
+						Map<String, ResourceInstance> templateInstances = new HashMap<>();
+						templateInstances.put(newResourceInstance.getResourceId(), newResourceInstance);
+						ResourceGroup resourceGroup = new ResourceGroup(resourceGroupName, templateInstances);
+						resourceDao.save(resourceGroup);
 					} else {
-						Resource resource = resourceDao.findById(resourceGroup).get();
-						resource.addTemplateInstance(newTemplateInstance);
+						ResourceGroup resource = resourceDao.findById(resourceGroupName).get();
+						resource.addResourceInstance(newResourceInstance);
 						resourceDao.save(resource);
 					}
 				} else {
 					throw new RuntimeException("Request to create resource failed with error code " + status);
 				}
 			} else {
-				throw new IllegalArgumentException("Template ID: " + templateId + " must have it's Resource Type set");
+				throw new IllegalArgumentException(
+						"Template ID: " + templateId + " does not have it's Resource Type set");
 			}
 		} else {
 			throw new IllegalArgumentException("Template ID: " + templateId + " does not exist");
 		}
 	}
 
-	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-	public void deleteResources(@RequestParam(name = "id") String id) {
-		if (resourceDao.existsById(id)) {
-			Resource resource = resourceDao.findById(id).get();
-			resourceService.deleteResource(resource);
-			for (String instanceID : resource.getTemplateInstances().keySet()) {
-				resource.getTemplateInstances().get(instanceID).setStatus(TemplateInstanceStatus.DELETING);
+	@RequestMapping(value = "/{resource-group}", method = RequestMethod.DELETE)
+	public void deleteResourceGroup(@RequestParam(name = "resource-group") String resourceGroupName) {
+		if (resourceDao.existsById(resourceGroupName)) {
+			ResourceGroup resourceGroup = resourceDao.findById(resourceGroupName).get();
+			resourceService.deleteResource(resourceGroup);
+			for (String instanceID : resourceGroup.getResourceInstances().keySet()) {
+				resourceGroup.getResourceInstances().get(instanceID).setStatus(TemplateInstanceStatus.DELETING);
 			}
-			resourceDao.save(resource);
+			resourceDao.save(resourceGroup);
 		} else {
-			throw new IllegalArgumentException("Resource group: " + id + " does not exist");
+			throw new IllegalArgumentException("ResourceGroup group: " + resourceGroupName + " does not exist");
 		}
 	}
 
-	@RequestMapping(value = "/{id}/{instance-id}", method = RequestMethod.PUT)
-	public void updateInstanceStatus(@PathVariable(name = "id") String id,
+	@RequestMapping(value = "/{resource-group}/{instance-id}", method = RequestMethod.PUT)
+	public void updateInstanceStatus(@PathVariable(name = "resource-group") String resourceGroupName,
 			@PathVariable(name = "instance-id") String instanceId,
 			@RequestParam(name = "status") TemplateInstanceStatus status) {
-		if (resourceDao.existsById(id)) {
-			Resource resource = resourceDao.findById(id).get();
-			if (resource.getTemplateInstances().containsKey(instanceId)) {
-				LOGGER.info("Updating status of resource group: " + id + ", instance: " + instanceId + ", to status: "
-						+ status.name());
-				resource.getTemplateInstances().get(instanceId).setStatus(status);
-				resourceDao.save(resource);
+		if (resourceDao.existsById(resourceGroupName)) {
+			ResourceGroup resourceGroup = resourceDao.findById(resourceGroupName).get();
+			if (resourceGroup.getResourceInstances().containsKey(instanceId)) {
+				LOGGER.info("Updating status of resourceGroup: " + resourceGroupName + ", instance: " + instanceId
+						+ ", to status: " + status.name());
+				resourceGroup.getResourceInstances().get(instanceId).setStatus(status);
+				resourceDao.save(resourceGroup);
 			} else {
 				throw new IllegalArgumentException(
-						"Resource instance: " + instanceId + " does not exist for resource group: " + id);
+						"Resource instance: " + instanceId + " does not exist for resourceGroup: " + resourceGroupName);
 			}
 		} else {
-			throw new IllegalArgumentException("Resource group: " + id + " does not exist");
+			throw new IllegalArgumentException("ResourceGroup: " + resourceGroupName + " does not exist");
 		}
 	}
 }
