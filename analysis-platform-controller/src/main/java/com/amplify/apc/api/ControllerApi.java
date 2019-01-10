@@ -1,15 +1,22 @@
 package com.amplify.apc.api;
 
+import com.amplify.apc.domain.ResourceType;
+import com.amplify.apc.domain.ResourceTypeConverter;
+import com.amplify.apc.services.azure.AbstractAzureService;
 import com.amplify.apc.services.azure.AzureService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,11 +37,17 @@ public class ControllerApi {
     @Autowired
     private AzureService azureService;
 
-    @RequestMapping(value = "/deployARMTemplate", method = RequestMethod.POST, consumes = {"multipart/form-data"})
+    @InitBinder
+    public void initBinder(final WebDataBinder webdataBinder) {
+        webdataBinder.registerCustomEditor(ResourceType.class, new ResourceTypeConverter());
+    }
+
+    @PostMapping(value = "/deployARMTemplate", consumes = {"multipart/form-data"})
     public ResponseEntity<String> deployARMTemplate(@RequestParam("resource-group") @NotBlank String resourceGroupName,
                                                     @RequestParam("instance-id") @NotBlank String instanceId,
                                                     @RequestParam("response-url") @NotBlank String responseUrl,
-                                                    @RequestParam("template") @Valid MultipartFile template) {
+                                                    @RequestParam("template") @Valid MultipartFile template,
+                                                    @RequestParam("resource-type") @NotBlank ResourceType resourceType) {
 
         LOGGER.info("Deploy ARM Template: [" + instanceId + "] to group: " + resourceGroupName);
         LOGGER.info("Response URL: {}", responseUrl);
@@ -53,22 +66,145 @@ public class ControllerApi {
 
                 LOGGER.info("Successfully uploaded template [" + fileName + "] to " + templateFile.getPath());
 
-                azureService.createResourceFromArmTemplate(templateFile, resourceGroupName, instanceId, responseUrl);
+                azureService.createResourceFromArmTemplate(templateFile, resourceType, resourceGroupName, instanceId,
+                        responseUrl);
 
-                return new ResponseEntity<>("You have successfully uploaded template [" + fileName + "] to " + templateFile.getPath() + " now processing...", HttpStatus.OK);
+                return new ResponseEntity<>("You have successfully uploaded template [" + fileName + "] to "
+                        + templateFile.getPath() + " now processing...", HttpStatus.OK);
 
             } catch (Exception e) {
-                return new ResponseEntity<>("You failed to upload template [" + fileName + "] : " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<>("You failed to upload template [" + fileName + "] : " + e.getMessage(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
-            return new ResponseEntity<>("Unable to upload template [" + fileName + "] - File is empty.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Unable to upload template [" + fileName + "] - File is empty.",
+                    HttpStatus.BAD_REQUEST);
         }
     }
 
-    @RequestMapping(value = "/deployARMTemplate/{resource-group}", method = RequestMethod.DELETE)
-    public void deleteResourceGroup(@PathVariable(name = "resource-group") String resourceGroupName, @RequestParam(name = "response-url") String responseUrl, @RequestBody List<String> instanceIds) {
+    @DeleteMapping(value = "/deployARMTemplate/{resource-group}")
+    public void deleteResourceGroup(@PathVariable(name = "resource-group") String resourceGroupName,
+                                    @RequestParam(name = "response-url") String responseUrl, @RequestBody List<String> instanceIds) {
+
         LOGGER.info("Request received to delete resource group {}", resourceGroupName);
         azureService.deleteResourceGroup(resourceGroupName, instanceIds, responseUrl);
     }
 
+    @PostMapping(value = "/createStorageAccount")
+	public ResponseEntity<String> createStorageAccount(@RequestParam("resource-group") String resourceGroupName,
+			@RequestParam(name = "account-name", required = false) String accountName) {
+		// TODO : Support multiple tags passed in Map<String,String>
+
+		// Generate Random name for the Storage Account (if not passed in)
+		String storageAccountName = AbstractAzureService.createRandomName("sa", 15);
+
+		LOGGER.info("Request received to Create Storage Account "
+				+ (StringUtils.isEmpty(accountName) ? "" : accountName + " ") + "in Resource Group ["
+				+ resourceGroupName + "]");
+
+        try {
+			azureService.createStorageAccount(resourceGroupName, storageAccountName);
+
+            return new ResponseEntity<>("You have successfully submitted a request to create Storage Account ["
+                    + storageAccountName + "] in Resource Group [" + resourceGroupName + "]", HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>("Unable to create Storage Account [" + storageAccountName
+                    + "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(value = "/deleteStorageAccount/{account-name}")
+    public ResponseEntity<String> deleteStorageAccount(
+            @RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("account-name") @NotBlank String storageAccountName) {
+
+        LOGGER.info("Request received to Delete Storage Account: [" + storageAccountName + "] in Resource Group ["
+                + resourceGroupName + "]");
+
+        try {
+			// TODO : Add protection ? Don't delete active Accounts ?
+			azureService.deleteStorageAccount(resourceGroupName, storageAccountName);
+
+            return new ResponseEntity<>("You have successfully submitted a request to delete Storage Account ["
+                    + storageAccountName + "] in Resource Group [" + resourceGroupName + "]", HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>("Unable to delete Storage Account [" + storageAccountName
+                    + "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(value = "/deleteStorageAccountById/{account-id}")
+    public ResponseEntity<String> deleteStorageAccountById(
+            @RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("account-id") @NotBlank String storageAccountId) {
+
+        LOGGER.info("Request received to Delete Storage Account: [" + storageAccountId + "] in Resource Group ["
+                + resourceGroupName + "]");
+
+        try {
+			// TODO : Add protection ? Don't delete active Accounts ?
+			azureService.deleteStorageAccountById(resourceGroupName, storageAccountId);
+
+            return new ResponseEntity<>("You have successfully submitted a request to delete Storage Account ["
+                    + storageAccountId + "] in Resource Group [" + resourceGroupName + "]", HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>("Unable to delete Storage Account [" + storageAccountId
+                    + "] in Resource Group [" + resourceGroupName + "] - " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping(value = "/createStorageContainer")
+    public ResponseEntity<String> createStorageContainer(
+            @RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("account-name") @NotBlank String storageAccountName) {
+		// TODO : Support multiple tags passed in Map<String,String>
+
+		LOGGER.info("Request received to Create Storage Container in Storage Account [" + storageAccountName
+                + "] in Resource Group [" + resourceGroupName + "]");
+
+        // Generate Random name for the Storage Container
+        String containerName = AbstractAzureService.createRandomName("stcont");
+
+        try {
+			azureService.createStorageContainer(resourceGroupName, storageAccountName, containerName);
+
+            return new ResponseEntity<>("You have successfully submitted a request to create Storage Container ["
+					+ containerName + "] in Storage Account [" + storageAccountName + "] in Resource Group ["
+                    + resourceGroupName + "]", HttpStatus.OK);
+
+        } catch (Exception e) {
+			return new ResponseEntity<>("Unable to create Storage Container [" + containerName
+					+ "] in Storage Account [" + storageAccountName + "] in Resource Group [" + resourceGroupName
+					+ "] - " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping(value = "/deleteStorageContainer")
+    public ResponseEntity<String> deleteStorageContainer(
+            @RequestParam("resource-group") @NotBlank String resourceGroupName,
+			@RequestParam("account-name") @NotBlank String storageAccountName,
+            @RequestParam("container-name") @NotBlank String containerName) {
+
+        LOGGER.info("Request received to Delete Storage Container: [" + containerName + "] in Storage Account ["
+				+ storageAccountName + "] in Resource Group [" + resourceGroupName + "]");
+
+        try {
+			azureService.deleteStorageContainer(resourceGroupName, storageAccountName, containerName);
+
+            return new ResponseEntity<>("You have successfully submitted a request to delete Storage Container ["
+					+ containerName + "] in Storage Account [" + storageAccountName + "] in Resource Group ["
+                    + resourceGroupName + "]", HttpStatus.OK);
+
+        } catch (Exception e) {
+			return new ResponseEntity<>("Unable to delete Storage Container [" + containerName
+					+ "] in Storage Account [" + storageAccountName + "] in Resource Group [" + resourceGroupName
+					+ "] - " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

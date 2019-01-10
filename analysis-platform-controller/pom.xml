@@ -4,7 +4,6 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.amplify</groupId>
     <artifactId>analysis-platform-controller</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -25,6 +24,12 @@
             <artifactId>javax.json</artifactId>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.microsoft.azure.profile_2018_03_01_hybrid/azure -->
+        <dependency>
+            <groupId>com.microsoft.azure.profile_2018_03_01_hybrid</groupId>
+            <artifactId>azure</artifactId>
+            <version>1.0.0-beta-1</version>
+        </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure</artifactId>
