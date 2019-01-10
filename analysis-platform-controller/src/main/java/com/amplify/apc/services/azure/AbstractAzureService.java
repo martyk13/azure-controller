@@ -53,7 +53,7 @@ public abstract class AbstractAzureService implements AzureService {
      */
     public static String createRandomName(String namePrefix, int maxLength) {
 
-        String name = namePrefix + UUID.randomUUID().toString().replace("-", "");
+        String name = namePrefix + UUID.randomUUID().toString().replace("-", "").toLowerCase();
         return (maxLength > 0 ? name.substring(0, maxLength) : name);
     }
 
@@ -92,7 +92,8 @@ public abstract class AbstractAzureService implements AzureService {
     private JsonObject getStorageProperties(String instanceId) {
         // The 'location' parameter gets defaulted to the location of the Resource Group
         // We're just defaulting the storage type to STANDARD_LRS for now
-        return Json.createObjectBuilder().add("storageAccountName", Json.createObjectBuilder().add("value", instanceId)).build();
+        return Json.createObjectBuilder().add("storageAccountName", Json.createObjectBuilder().add("value", instanceId))
+                .add("containerName", Json.createObjectBuilder().add("value", createRandomName("", 15))).build();
     }
 
     protected JsonNode getTemplate(File templateFile)
