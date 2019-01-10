@@ -102,8 +102,7 @@ public class AzureServiceCloud extends AbstractAzureService {
 	}
 
 	@Override
-	public void createStorageAccount(String resourceGroupName, String storageAccountName, String instanceId,
-			String responseUrl) {
+	public void createStorageAccount(String resourceGroupName, String storageAccountName) {
 
 		try {
 			// TODO : How should the response service work for this type of request ?
@@ -116,43 +115,39 @@ public class AzureServiceCloud extends AbstractAzureService {
 					.withRegion(group.region()).withExistingResourceGroup(group).create();
 
 			if (storageAccount != null) {
-				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
+				LOGGER.info("Request for creation of Storage Account: [" + storageAccountName + "] in Resource Group ["
+						+ resourceGroupName + "] SUCCESS");
 			} else {
 				LOGGER.info("Request for creation of Storage Account: [" + storageAccountName + "] in Resource Group ["
 						+ resourceGroupName + "] FAILED - already exists");
-				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 			}
 
 		} catch (
 
 		Exception e) {
 			LOGGER.error(e.getMessage());
-			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 		}
 	}
 
 	@Override
-	public void deleteStorageAccount(String resourceGroupName, String storageAccountName, String instanceId,
-			String responseUrl) {
+	public void deleteStorageAccount(String resourceGroupName, String storageAccountName) {
 		try {
 			// TODO : How should the response service work for this type of request ?
 
 			StorageAccount storageAccount = azureService.storageAccounts().getByResourceGroup(resourceGroupName,
 					storageAccountName);
 
-			deleteStorageAccountById(resourceGroupName, storageAccount.id(), instanceId, responseUrl);
+			deleteStorageAccountById(resourceGroupName, storageAccount.id());
 
 		} catch (
 
 		Exception e) {
 			LOGGER.error(e.getMessage());
-			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 		}
 	}
 
 	@Override
-	public void deleteStorageAccountById(String resourceGroupName, String storageAccountId, String instanceId,
-			String responseUrl) {
+	public void deleteStorageAccountById(String resourceGroupName, String storageAccountId) {
 		try {
 			// TODO : How should the response service work for this type of request ?
 
@@ -162,76 +157,71 @@ public class AzureServiceCloud extends AbstractAzureService {
 			// Delete, ... ?
 			if (storageAccountId != null) {
 				azureService.storageAccounts().deleteById(storageAccount.id());
-				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
+				LOGGER.info("Request for deletion of Storage Account with ID : [" + storageAccountId
+						+ "] in Resource Group [" + resourceGroupName + "] SUCCESS");
 			} else {
 				LOGGER.info("Request for deletion of Storage Account with ID : [" + storageAccountId
 						+ "] in Resource Group [" + resourceGroupName + "] FAILED as it does not exist");
-				responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 			}
 
 		} catch (
 
 		Exception e) {
 			LOGGER.error(e.getMessage());
-			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 		}
 	}
 
 	@Override
-	public void createStorageContainer(String resourceGroupName, String accountName, String containerName,
-			String instanceId, String responseUrl) {
+	public void createStorageContainer(String resourceGroupName, String storageAccountName, String containerName) {
 		try {
 			// TODO : How should the response service work for this type of request ?
 
 			// Get hold of a reference to the Container (NOTE this doesn't create the
 			// container - it may or may not exist)
-			CloudBlobContainer container = getContainerReference(resourceGroupName, accountName, containerName);
+			CloudBlobContainer container = getContainerReference(resourceGroupName, storageAccountName, containerName);
 
 			if (container != null) {
 				// Create the container if it does not exist with NO public access.
-				if (container.createIfNotExists(BlobContainerPublicAccessType.OFF, new BlobRequestOptions(),
-						new OperationContext())) {
-					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "READY");
+				if (!container.exists()) {
+					container.create(BlobContainerPublicAccessType.OFF, new BlobRequestOptions(),
+							new OperationContext());
+					LOGGER.info("Request for creation of Storage Container: [" + containerName
+							+ "] in Storage Account [" + storageAccountName + "] in Resource Group ["
+							+ resourceGroupName + "] SUCCESS");
 				} else {
 					LOGGER.info("Request for creation of Storage Container: [" + containerName
-							+ "] in Storage Account [" + accountName + "] in Resource Group [" + resourceGroupName
-							+ "] FAILED - already exists");
-					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+							+ "] in Storage Account [" + storageAccountName + "] in Resource Group ["
+							+ resourceGroupName + "] FAILED - already exists");
 				}
 			}
 
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
-			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 		}
 	}
 
 	@Override
-	public void deleteStorageContainer(String resourceGroupName, String accountName, String containerName,
-			String instanceId, String responseUrl) {
+	public void deleteStorageContainer(String resourceGroupName, String storageAccountName, String containerName) {
 		try {
 			// TODO : How should the response service work for this type of request ?
 			// Get hold of a reference to the Container (NOTE this doesn't create the
 			// container - it may or may not exist)
-			CloudBlobContainer container = getContainerReference(resourceGroupName, accountName, containerName);
+			CloudBlobContainer container = getContainerReference(resourceGroupName, storageAccountName, containerName);
 
 			if (container != null) {
 				// TODO : Protection against mistaken deletion ? Use of Access Policies, Soft
 				// Delete, ... ?
 				// Delete the container if it exists
-				if (container.deleteIfExists()) {
-					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "DELETED");
+				if (container.exists()) {
+					container.delete();
 				} else {
 					LOGGER.info("Request for deletion of Storage Container: [" + containerName
-							+ "] in Storage Account [" + accountName + "] in Resource Group [" + resourceGroupName
-							+ "] FAILED as it doesn not exist");
-					responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
+							+ "] in Storage Account [" + storageAccountName + "] in Resource Group ["
+							+ resourceGroupName + "] FAILED as it doesn not exist");
 				}
 			}
-
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage());
-			responseService.updateStatus(responseUrl, resourceGroupName, instanceId, "FAILED");
 		}
 	}
 

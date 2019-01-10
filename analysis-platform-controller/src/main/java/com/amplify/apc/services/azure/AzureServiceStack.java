@@ -172,37 +172,36 @@ public class AzureServiceStack extends AbstractAzureService {
 	}
 
 	@Override
-	public void createStorageAccount(String resourceGroupName, String accountName, String instanceId,
-			String responseUrl) {
-		// TODO Auto-generated method stub
+	public void createStorageAccount(String resourceGroupName, String storageAccountName) {
 		
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("createStorageAccount() not yet implemented");
 	}
 
 	@Override
-	public void deleteStorageAccount(String resourceGroupName, String accountName, String instanceId,
-			String responseUrl) {
-		// TODO Auto-generated method stub
+	public void deleteStorageAccount(String resourceGroupName, String storageAccountName) {
 		
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("deleteStorageAccount() not yet implemented");
 	}
 
 	@Override
-	public void deleteStorageAccountById(String resourceGroupName, String storageAccountId, String instanceId,
-			String responseUrl) {
-		// TODO Auto-generated method stub
+	public void deleteStorageAccountById(String resourceGroupName, String storageAccountId) {
 		
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("deleteStorageAccountById() not yet implemented");
 	}
 	@Override
-	public void createStorageContainer(String resourceGroupName, String accountName, String containerName,
-			String instanceId, String responseUrl) {
+	public void createStorageContainer(String resourceGroupName, String storageAccountName, String containerName) {
 
 		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("createStorageContainer() not yet implemented");
 	}
 
 	@Override
-	public void deleteStorageContainer(String resourceGroupName, String accountName, String containerName,
-			String instanceId, String responseUrl) {
+	public void deleteStorageContainer(String resourceGroupName, String storageAccountName, String containerName) {
 
 		// TODO Auto-generated method stub
-
+		throw new UnsupportedOperationException("deleteStorageContainer() not yet implemented");
 	}
 }

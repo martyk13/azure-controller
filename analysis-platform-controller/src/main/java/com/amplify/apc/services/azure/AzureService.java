@@ -17,22 +17,19 @@ public interface AzureService {
 	public void deleteResourceGroup(String resourceGroupName, List<String> instanceIds, String responseUrl);
 
 	@Async
-	public void createStorageAccount(String resourceGroupName, String accountName, String instanceId,
-			String responseUrl);
+	public void createStorageAccount(String resourceGroupName, String storageAccountName);
 
 	@Async
-	public void deleteStorageAccount(String resourceGroupName, String accountName, String instanceId,
-			String responseUrl);
-
-	void deleteStorageAccountById(String resourceGroupName, String storageAccountId, String instanceId,
-			String responseUrl);
-	@Async
-	public void createStorageContainer(String resourceGroupName, String accountName, String containerName,
-			String instanceId, String responseUrl);
+	public void deleteStorageAccount(String resourceGroupName, String storageAccountName);
 
 	@Async
-	public void deleteStorageContainer(String resourceGroupName, String accountName, String containerName,
-			String instanceId, String responseUrl);
+	void deleteStorageAccountById(String resourceGroupName, String storageAccountId);
+	
+	@Async
+	public void createStorageContainer(String resourceGroupName, String storageAccountName, String containerName);
+
+	@Async
+	public void deleteStorageContainer(String resourceGroupName, String storageAccountName, String containerName);
 
 
 }
